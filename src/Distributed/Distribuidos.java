@@ -4,14 +4,25 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.Scanner;
 
-public class MainDistributed {
+public class Distribuidos {
 
+    /**
+     * Parameters to change dynamically after
+     */
     private static int port=7000;
-
     //The group address must be in the range 224.0.0.0 to 239.255.255.255
     static String group = new String("226.1.0.2");
 
+
+
+    public Distribuidos() {
+        String port;
+        String groupAddress;
+    }
+
+    /*
     public static void main(String[] args) {
         System.out.println("Hello Distributed!");
 
@@ -35,5 +46,17 @@ public class MainDistributed {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    */
+
+    private void selectPortAddress(){
+        Scanner scan = new Scanner(System.in);  // Reading from System.in
+
+        System.out.println("Select a port : ");
+        String port = scan.next();
+
+        System.out.println("Select a group address : ");
+        String address = scan.next();
+
     }
 }
