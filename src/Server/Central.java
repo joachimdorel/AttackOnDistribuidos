@@ -11,10 +11,10 @@ public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     private static final int PORT_SERVER = 2009;
-    private List<Distrito> distritos;
+    private List<District> distritos;
 
     public Central(){
-        distritos= new ArrayList<Distrito>();
+        distritos= new ArrayList<District>();
     }
 
     public static void main(String[] args) {
@@ -29,27 +29,27 @@ public class Central {
     public void agregarDistrito(){
         Scanner scan = new Scanner(System.in);  // Reading from System.in
 
-        System.out.println("AGREGAR DISTRITO");
-        System.out.println(SERVER_CENTRAL+"Nombre Distrito:");
-        String nombre = scan.next();
-        System.out.println(SERVER_CENTRAL+"IP Multicast:");
-        String ipMulticast = scan.next();
-        System.out.println(SERVER_CENTRAL+"Puerto Multicast:");
-        String puertoMulticast = scan.next();
-        System.out.println(SERVER_CENTRAL+"IP Peticiones:");
-        String ipPeticiones = scan.next();
-        System.out.println(SERVER_CENTRAL+"Puerto Peticiones:");
-        String puertoPeticiones = scan.next();
+        System.out.println("ADD DISTRICT");
+        System.out.println(SERVER_CENTRAL+"District Name:");
+        String name = scan.next();
+        System.out.println(SERVER_CENTRAL+"Multicast IP:");
+        String multicastIp = scan.next();
+        System.out.println(SERVER_CENTRAL+"Multicast Port:");
+        String multicastPort = scan.next();
+        System.out.println(SERVER_CENTRAL+"Request IP:");
+        String requestIp = scan.next();
+        System.out.println(SERVER_CENTRAL+"Request Port:");
+        String requestPort = scan.next();
 
         scan.close();
 
-        this.distritos.add(new Distrito(nombre, ipMulticast, puertoMulticast, ipPeticiones, puertoPeticiones));
+        this.distritos.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
     }
 
     public void waitAuthorization(){
         ServerSocket serverSocket;
         Socket socket;
-        String distritoClient = null;
+        String ClientDistrict = null;
 
         try {
             serverSocket = new ServerSocket(PORT_SERVER);
@@ -58,12 +58,12 @@ public class Central {
             InputStream inputStream = socket.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
             try {
-                distritoClient = String.valueOf(objectInputStream.readObject());
+                ClientDistrict = String.valueOf(objectInputStream.readObject());
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
-            giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), distritoClient);
+            giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), ClientDistrict);
 
             OutputStream outputStream = socket.getOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
@@ -77,8 +77,8 @@ public class Central {
         }
     }
 
-    private Boolean giveAuthorization(String ipClient, String distritoClient) {
-        System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + distritoClient);
+    private Boolean giveAuthorization(String ipClient, String ClientDistrict) {
+        System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
 
         return true;
     }

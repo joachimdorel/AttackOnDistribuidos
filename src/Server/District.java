@@ -1,20 +1,17 @@
 package Server;
 
-import Creature.Titanes;
+import Creature.Titans;
 import Util.*;
 
-public class Distrito {
-
-    String nombre;
+public class District {
+    String name;
     String ipMulticast;
     String puertoMulticast;
     String ipPeticiones;
     String puertoPeticiones;
 
-    public Distrito(){}
-
-    public Distrito(String nombre, String ipMulticast, String puertoMulticast, String ipPeticiones, String puertoPeticiones) {
-        this.nombre = nombre;
+    public District(String name, String ipMulticast, String puertoMulticast, String ipPeticiones, String puertoPeticiones) {
+        this.name = name;
         this.ipMulticast = ipMulticast;
         this.puertoMulticast = puertoMulticast;
         this.ipPeticiones = ipPeticiones;
@@ -25,10 +22,10 @@ public class Distrito {
         ID_generator id_g = new ID_generator();
         Integer id = id_g.newID();
         RandomEnum r = new RandomEnum();
-        Const.Tipo tipo = r.randomEnum(Const.Tipo.class);
+        Const.Type type = r.randomEnum(Const.Type.class);
         Const.Titan_name name = r.randomEnum(Const.Titan_name.class);
-        Titanes newTitan = new Titanes(name, id, tipo);
+        Titans newTitan = new Titans(name, id, type);
     }
 
-    //TODO: lancer une creation de titan regulierement
+    //TODO: lancer une creation de titan regulierement, timer ??
 }
