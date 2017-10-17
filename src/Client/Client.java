@@ -1,9 +1,12 @@
 package Client;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Client {
@@ -26,14 +29,19 @@ public class Client {
         String ipServer = scan.next();
         System.out.println(CLIENT+"Enter Port Server Central:");
         System.out.println(CLIENT+"Currently on 2009:");
-        String portServer = scan.next();
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it have to be a integer)");
+            scan.next();
+        }
+        Integer portServer = scan.nextInt();
         System.out.println(CLIENT+"Enter District to Connect to:");
         System.out.println(CLIENT+"Currently does not matter");
         String district = scan.next();
 
         scan.close();
 
-        this.askServerCentral(Integer.parseInt(portServer), ipServer, district);
+        this.askServerCentral(portServer, ipServer, district);
+
     }
 
     public void askServerCentral(int port, String host, String district) {

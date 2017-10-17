@@ -6,6 +6,13 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.Scanner;
 
+/**
+ * A distributed file system is a client/server-based application that allows clients
+ * to access and process data stored on the server as if it were on their own computer.
+ * When a user accesses a file on the server, the server sends the user a copy of the file,
+ * which is cached on the user's computer while the data is being processed and is then returned to the server.
+ */
+
 public class Distribuidos {
 
     /**
