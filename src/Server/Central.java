@@ -11,22 +11,23 @@ public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     private static final int PORT_SERVER = 2009;
-    private List<District> distritos;
+    private List<District> districts;
 
     public Central(){
-        distritos= new ArrayList<District>();
+        districts= new ArrayList<District>();
     }
 
     public static void main(String[] args) {
+        System.out.println(SERVER_CENTRAL);
         Central c1 = new Central();
 
-        //Ajout d'un seul distrito
-        //c1.agregarDistrito();
+        //Ajout d'un seul district
+        //c1.agregarDistrict();
 
         c1.waitAuthorization();
     }
 
-    public void agregarDistrito(){
+    public void agregarDistrict(){
         Scanner scan = new Scanner(System.in);  // Reading from System.in
 
         System.out.println("ADD DISTRICT");
@@ -43,13 +44,14 @@ public class Central {
 
         scan.close();
 
-        this.distritos.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
+        this.districts.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
     }
 
     public void waitAuthorization(){
         ServerSocket serverSocket;
         Socket socket;
-        String ClientDistrict = null;
+        String ClientDistrict = null, authorizationAccorded = null;
+        District districtReturned = null;
 
         try {
             serverSocket = new ServerSocket(PORT_SERVER);
@@ -59,15 +61,21 @@ public class Central {
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
             try {
                 ClientDistrict = String.valueOf(objectInputStream.readObject());
+                //TODO Search the district corresponding in List<District> districts
+                //districtReturned = district.getDistrictByName ? ---> The function is not coded yet...
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
-            giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), ClientDistrict);
-
             OutputStream outputStream = socket.getOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject("Client Received");
+            if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), ClientDistrict)){
+                objectOutputStream.writeBoolean(true);
+                System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ ClientDistrict);
+                System.out.println(SERVER_CENTRAL+ClientDistrict.toString());
+            }else{
+                objectOutputStream.writeBoolean(false);
+            }
             objectOutputStream.close();
 
             serverSocket.close();
@@ -78,9 +86,13 @@ public class Central {
     }
 
     private Boolean giveAuthorization(String ipClient, String ClientDistrict) {
-        System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
+        Scanner scan = new Scanner(System.in);  // Reading from System.in
 
-        return true;
+        System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
+        System.out.println("1. - YES");
+        System.out.println("2. - NO");
+
+        return (scan.next().equals("1")) ? true : false;
     }
 
 

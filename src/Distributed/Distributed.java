@@ -13,7 +13,7 @@ import java.util.Scanner;
  * which is cached on the user's computer while the data is being processed and is then returned to the server.
  */
 
-public class Distribuidos {
+public class Distributed {
 
     /**
      * Parameters to change dynamically after
@@ -24,7 +24,7 @@ public class Distribuidos {
 
 
 
-    public Distribuidos() {
+    public Distributed() {
         String port;
         String groupAddress;
     }

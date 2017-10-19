@@ -18,14 +18,12 @@ public class District {
         this.puertoPeticiones = puertoPeticiones;
     }
 
-    private void CreateNewTitan() {
-        ID_generator id_g = new ID_generator();
-        Integer id = id_g.newID();
-        RandomEnum r = new RandomEnum();
-        Const.Type type = r.randomEnum(Const.Type.class);
-        Const.Titan_name name = r.randomEnum(Const.Titan_name.class);
-        Titans newTitan = new Titans(name, id, type);
+    @Override
+    public String toString() {
+        return "Nombre:'" + name + ',' +
+                ", IP Multicast:'" + ipMulticast + ',' +
+                ", Puerto Multicast:'" + puertoMulticast + ',' +
+                ", IP Peticiones:'" + ipPeticiones + ',' +
+                ", Puerto Peticiones:'" + puertoPeticiones;
     }
-
-    //TODO: lancer une creation de titan regulierement, timer ??
 }

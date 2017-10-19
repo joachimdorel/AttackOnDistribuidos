@@ -16,6 +16,7 @@ public class Client {
     }
 
     public static void main(String[] args) {
+        System.out.println(CLIENT);
         Client c=new Client();
         c.connectionServer();
     }
@@ -24,9 +25,11 @@ public class Client {
         Scanner scan = new Scanner(System.in);  // Reading from System.in
 
         System.out.println(CLIENT+"Enter IP Server Central:");
+        //TODO Remove when it will matter
         System.out.println(CLIENT+"Currently does not matter");
         String ipServer = scan.next();
         System.out.println(CLIENT+"Enter Port Server Central:");
+        //TODO Remove when it will matter
         System.out.println(CLIENT+"Currently on 2009:");
         while (!scan.hasNextInt()) {
             System.out.println("You have badly written the port, do it again (it have to be a integer)");
@@ -34,18 +37,23 @@ public class Client {
         }
         Integer portServer = scan.nextInt();
         System.out.println(CLIENT+"Enter District to Connect to:");
+        //TODO Remove when it will matter
         System.out.println(CLIENT+"Currently does not matter");
         String district = scan.next();
 
         scan.close();
 
-        this.askServerCentral(portServer, ipServer, district);
+        if(this.askServerCentral(portServer, ipServer, district)) {
+            openMenu();
+        }else{
+            System.out.println("Authorization refused from the server central.");
+        }
 
     }
 
-    public void askServerCentral(int port, String host, String district) {
+    public boolean askServerCentral(int port, String host, String district) {
         Socket socket;
-        String responseFromServer = null;
+        Boolean responseFromServer = null;
 
         try {
             //TODO update when deployed
@@ -58,11 +66,7 @@ public class Client {
 
             InputStream inputStream = socket.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-            try {
-                responseFromServer = String.valueOf(objectInputStream.readObject());
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+            responseFromServer = objectInputStream.readBoolean();
 
             inputStream.close();
             objectOutputStream.close();
@@ -73,6 +77,16 @@ public class Client {
             e.printStackTrace();
         }
 
-        System.out.println(responseFromServer);
+        return(responseFromServer);
+    }
+
+    public void openMenu(){
+        System.out.println(CLIENT+"Console");
+        System.out.println(CLIENT+"(1) List the Titans");
+        System.out.println(CLIENT+"(2) Change District");
+        System.out.println(CLIENT+"(3) Capture Titan");
+        System.out.println(CLIENT+"(4) Kill Titan");
+        System.out.println(CLIENT+"(5) List Captured Titans");
+        System.out.println(CLIENT+"(6) List Killed Titans");
     }
 }
