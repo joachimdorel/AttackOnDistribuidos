@@ -13,6 +13,11 @@ import java.util.Scanner;
  * which is cached on the user's computer while the data is being processed and is then returned to the server.
  */
 
+
+//TODO figure out how to launch threads when creating a new district 
+//TODO events : notify to all when titan captured/killed (thread always activ listens to the messages sent by clients, other one treats demands)
+
+
 public class Distributed {
 
     /**

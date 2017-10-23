@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+//TODO when registrate a district : verify that it exists and add it in the list
+
 public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";

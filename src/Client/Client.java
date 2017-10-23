@@ -14,6 +14,8 @@ public class Client {
 
     public Client() {
     }
+	//TODO create the 2 threads (thread principal = send thread ; listening thread will be overwrited when changing of district)
+	//TODO menu : switch between options : write each method
 
     public static void main(String[] args) {
         System.out.println(CLIENT);
@@ -32,7 +34,7 @@ public class Client {
         //TODO Remove when it will matter
         System.out.println(CLIENT+"Currently on 2009:");
         while (!scan.hasNextInt()) {
-            System.out.println("You have badly written the port, do it again (it have to be a integer)");
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
             scan.next();
         }
         Integer portServer = scan.nextInt();
