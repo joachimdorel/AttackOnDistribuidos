@@ -17,6 +17,7 @@ public class Client {
     private int portServer;
     private String ipDistrict;
     private int portDistrict;
+    //TODO : change structure ?? les tableaux ne sont pas dynamique --> use LinkedList ?!
     private Titans[] tabDistrictTitans;
     private Titans[] tabCapturedTitans;
     private Titans[] tabKilledTitans;
