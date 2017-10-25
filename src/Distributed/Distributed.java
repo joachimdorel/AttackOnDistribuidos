@@ -1,9 +1,14 @@
 package Distributed;
 
+import Creature.Titans;
+import Util.Const;
+import Util.ID_generator;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -14,12 +19,15 @@ import java.util.Scanner;
  */
 
 
-//TODO figure out how to launch threads when creating a new district 
+//TODO figure out how to launch threads when creating a new district
+    //TODO creation of a new distributed district server
 //TODO events : notify to all when titan captured/killed (thread always activ listens to the messages sent by clients, other one treats demands)
 
 
 public class Distributed {
-
+    private static final String DISTRIBUTED = " DISTRICT ";
+    private String name = "";
+    private ArrayList<Titans> titansList = new ArrayList<Titans>();
     /**
      * Parameters to change dynamically after
      */
@@ -28,19 +36,26 @@ public class Distributed {
     static String group = new String("226.1.0.2");
 
 
-
     public Distributed() {
         String port;
         String groupAddress;
     }
 
-    /*
+    private Distributed(String name){
+        String port;
+        String groupAddress;
+        this.name = name;
+    }
+
+
     public static void main(String[] args) {
         System.out.println("Hello Distributed!");
+        Scanner scan = new Scanner(System.in);  // Reading from System.in
 
         InetAddress groupAddress;
         MulticastSocket socketMulticast;
 
+            //TODO : initialization du district
         try {
             socketMulticast = new MulticastSocket(port);
             groupAddress = InetAddress.getByName(group);
@@ -58,17 +73,50 @@ public class Distributed {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        scan.close();
     }
-    */
 
-    private void selectPortAddress(){
-        Scanner scan = new Scanner(System.in);  // Reading from System.in
 
+    private void selectPortAddress(Scanner scan){
         System.out.println("Select a port : ");
         String port = scan.next();
 
         System.out.println("Select a group address : ");
         String address = scan.next();
+
+    }
+
+        //TODO call this function only in a specific district
+    private void TitanPublication(Scanner scan){
+        System.out.println("[ " + DISTRIBUTED + name + "] " + "Publish titan : ");
+        System.out.println("[ " + DISTRIBUTED + name + "] " + "Enter a name : ");
+        String titanName = scan.next();
+        System.out.println("[ " + DISTRIBUTED + name + "] " + "Select a type : ");
+        System.out.println("1.-" + Const.Type.NORMAL);
+        System.out.println("2.-" + Const.Type.ECCENTRIC);
+        System.out.println("3.-" + Const.Type.INCONSTANT);
+        int i = scan.nextInt();
+        Const.Type type;
+        if (i == 1){
+            type = Const.Type.NORMAL;
+        } else if (i == 2){
+            type = Const.Type.ECCENTRIC;
+        } else if (i == 3){
+            type = Const.Type.INCONSTANT;
+        } else {
+            //TODO remove - erreur
+            type = Const.Type.NORMAL;
+        }
+        //TODO : envoyer un message au serveur central pour demander un id
+        ID_generator id_g = new ID_generator();
+        Titans newTitan = new Titans(titanName, id_g.newID(), type, name);
+        titansList.add(newTitan);
+        System.out.println("[ " + DISTRIBUTED + name + "] " + "A titan has been published : ");
+        System.out.println("************");
+        System.out.println("ID: " + newTitan.getID());
+        System.out.println("Name: " + newTitan.getName());
+        System.out.println("Type: " + newTitan.getType());
+        System.out.println("************");
 
     }
 }

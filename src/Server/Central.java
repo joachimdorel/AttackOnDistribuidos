@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 
 //TODO when registrate a district : verify that it exists and add it in the list
+//TODO : faire un id generateur
 
 public class Central {
 
