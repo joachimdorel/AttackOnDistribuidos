@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client {
@@ -18,9 +19,9 @@ public class Client {
     private String ipDistrict;
     private int portDistrict;
     //TODO : change structure ?? les tableaux ne sont pas dynamique --> use LinkedList ?!
-    private Titans[] tabDistrictTitans;
-    private Titans[] tabCapturedTitans;
-    private Titans[] tabKilledTitans;
+    private ArrayList<Titans> tabDistrictTitans = new ArrayList<Titans>();
+    private ArrayList<Titans> tabCapturedTitans = new ArrayList<Titans>();
+    private ArrayList<Titans> tabKilledTitans = new ArrayList<Titans>();
 
 	//TODO create the 2 threads (thread principal = send thread ; listening thread will be overwrited when changing of district)
 	//TODO tab of District Titans synchronize methods
@@ -69,7 +70,7 @@ public class Client {
     }
 
 
-	// function that take the central server port and ip address, ask the client which district he wants to connect to,
+	// function asks the client which district he wants to connect to,
     // and try to connect the client to the district he will enter the name of
 	private void connectDistrict(Scanner scan){
         System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
@@ -86,7 +87,8 @@ public class Client {
 	}
 
 
-	// function that take the port, ip address of the central server, and name of the wanted district, and ask the connection authorization to the central server. Return true if success, false if fail.
+	// function that take the port, ip address of the central server, and name of the wanted district,
+	// and ask the connection authorization to the central server. Return true if success, false if fail.
     private boolean askServerCentral(String districtName) {
         Socket socket;
         Boolean responseFromServer = null;
@@ -218,14 +220,14 @@ public class Client {
     }
 
 	//function void used in the menu, to show a list of titans of the table entered in parameter
-	private void showListTitans(Titans[] tab){
+	private void showListTitans(ArrayList<Titans> tab){
 		System.out.println("-------------------------------");
 		for (Titans titan : tab)
 			System.out.println(titan.getName() + ", ID : " + titan.getID() + ", type: " + titan.getType());
 	}
 
 	// boolean function used in the menu to ask the district (port and ip address in parameter) to capture a titan (id en parameter). return true if success, false if fail.
-	private boolean captureTitan(int numTitan){
+	private boolean captureTitan(int idTitan){
 		boolean captured=false;
 		//TODO write the code of the function, that send message to the district to ask to capture the titan, and get the response back. return true if success, false if fail. +++ actualize the table from here
 		//CAUTION: the titan has to be normal or inconstant
@@ -233,7 +235,7 @@ public class Client {
 	}
 
 	// boolean function used in the menu to ask the district (port and ip address in parameter) to kill a titan (id en parameter). return true if success, false if fail.
-	private boolean killTitan(int numTitan){
+	private boolean killTitan(int idTitan){
 		boolean killed=false;
 		//TODO write the code of the function, that send message to the district to ask to kill the titan, and get the response back. return true if success, false if fail. +++ actualize the table from here
 		//CAUTION: the titan has to be normal or eccentric

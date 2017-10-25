@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -27,7 +27,7 @@ import java.util.Scanner;
 public class Distributed {
     private static final String DISTRIBUTED = " DISTRICT ";
     private String name = "";
-    private LinkedList<Titans> titansList = new LinkedList<Titans>();
+    private ArrayList<Titans> titansList = new ArrayList<Titans>();
     /**
      * Parameters to change dynamically after
      */
@@ -55,6 +55,7 @@ public class Distributed {
         InetAddress groupAddress;
         MulticastSocket socketMulticast;
 
+            //TODO : initialization du district
         try {
             socketMulticast = new MulticastSocket(port);
             groupAddress = InetAddress.getByName(group);
@@ -102,9 +103,12 @@ public class Distributed {
             type = Const.Type.ECCENTRIC;
         } else if (i == 3){
             type = Const.Type.INCONSTANT;
+        } else {
+            //TODO remove - erreur
+            type = Const.Type.NORMAL;
         }
+        //TODO : envoyer un message au serveur central pour demander un id
         ID_generator id_g = new ID_generator();
-        //JE COMPRENDS PAS L ERREUR .... SNIFF
         Titans newTitan = new Titans(titanName, id_g.newID(), type, name);
         titansList.add(newTitan);
         System.out.println("[ " + DISTRIBUTED + name + "] " + "A titan has been published : ");

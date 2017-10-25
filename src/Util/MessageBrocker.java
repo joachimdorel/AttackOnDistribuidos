@@ -12,6 +12,8 @@ import java.util.Map;
  * and vice versa (map serialization into JSON string)
  */
 
+//TODO : rajouter pour le traitement des listes et des objets (liste de titan)
+
 public class MessageBrocker {
     /**
      * A encapsulated map representing some message
