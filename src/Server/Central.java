@@ -8,13 +8,14 @@ import java.util.List;
 import java.util.Scanner;
 
 //TODO when registrate a district : verify that it exists and add it in the list
-//TODO : faire un id generateur
+//TODO update the clients list when a client change his district or when other client appears
 
 public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     private static final int PORT_SERVER = 2009;
     private List<District> districts;
+    private List<Client> clients;
 
     public Central(){
         districts= new ArrayList<District>();
@@ -22,35 +23,41 @@ public class Central {
 
     public static void main(String[] args) {
         System.out.println(SERVER_CENTRAL);
+        Scanner scan = new Scanner(System.in);  // Reading from System.in
         Central c1 = new Central();
 
         //Ajout d'un seul district
         //c1.agregarDistrict();
 
-        c1.waitAuthorization();
+        c1.waitAuthorization(scan);
+        scan.close();
     }
 
-    public void agregarDistrict(){
-        Scanner scan = new Scanner(System.in);  // Reading from System.in
-
+    public void addDistrict(Scanner scan){
         System.out.println("ADD DISTRICT");
         System.out.println(SERVER_CENTRAL+"District Name:");
         String name = scan.next();
         System.out.println(SERVER_CENTRAL+"Multicast IP:");
         String multicastIp = scan.next();
         System.out.println(SERVER_CENTRAL+"Multicast Port:");
-        String multicastPort = scan.next();
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
+            scan.next();
+        }
+        int multicastPort = scan.nextInt();
         System.out.println(SERVER_CENTRAL+"Request IP:");
         String requestIp = scan.next();
         System.out.println(SERVER_CENTRAL+"Request Port:");
-        String requestPort = scan.next();
-
-        scan.close();
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
+            scan.next();
+        }
+        int requestPort = scan.nextInt();
 
         this.districts.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
     }
 
-    public void waitAuthorization(){
+    private void waitAuthorization(Scanner scan){
         ServerSocket serverSocket;
         Socket socket;
         String ClientDistrict = null, authorizationAccorded = null;
@@ -72,10 +79,10 @@ public class Central {
 
             OutputStream outputStream = socket.getOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), ClientDistrict)){
+            if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), ClientDistrict, scan)){
                 objectOutputStream.writeBoolean(true);
                 System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ ClientDistrict);
-                System.out.println(SERVER_CENTRAL+ClientDistrict.toString());
+                System.out.println(SERVER_CENTRAL+ClientDistrict);
             }else{
                 objectOutputStream.writeBoolean(false);
             }
@@ -88,9 +95,7 @@ public class Central {
         }
     }
 
-    private Boolean giveAuthorization(String ipClient, String ClientDistrict) {
-        Scanner scan = new Scanner(System.in);  // Reading from System.in
-
+    private Boolean giveAuthorization(String ipClient, String ClientDistrict, Scanner scan) {
         System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
         System.out.println("1. - YES");
         System.out.println("2. - NO");

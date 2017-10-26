@@ -112,14 +112,10 @@ public class MessageBroker {
             return null;
         ArrayList<Titans> res = new ArrayList<Titans>();
         for (Object o : obj) {
-            System.out.println(o.getClass());
-            try{
-                //TODO check the cast
+            //TODO check the cast
+            if (o instanceof java.util.LinkedHashMap) {
                 res.add(Titans.valueOf((LinkedHashMap<String, Object>) o));
-            } catch (Exception e){
-                e.printStackTrace();
             }
-
         }
         return res;
     }

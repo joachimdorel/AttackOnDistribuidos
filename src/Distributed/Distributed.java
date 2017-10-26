@@ -2,10 +2,10 @@ package Distributed;
 
 import Creature.Titans;
 import Util.Const;
-import Util.ID_generator;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
@@ -22,91 +22,127 @@ import java.util.Scanner;
 //TODO figure out how to launch threads when creating a new district
     //TODO creation of a new distributed district server
 //TODO events : notify to all when titan captured/killed (thread always activ listens to the messages sent by clients, other one treats demands)
-
+//TODO: check all id are different
 
 public class Distributed {
     private static final String DISTRIBUTED = " DISTRICT ";
     private String name = "";
-    private ArrayList<Titans> titansList = new ArrayList<Titans>();
-    /**
-     * Parameters to change dynamically after
-     */
-    private static int port=7000;
     //The group address must be in the range 224.0.0.0 to 239.255.255.255
-    static String group = new String("226.1.0.2");
+    private String multicastIP; //it is the group address
+    private int multicastPort;
+    private String requestIP;
+    private int requestPort;
+    private ArrayList<Titans> titansList = new ArrayList<Titans>();
 
-
-    public Distributed() {
-        String port;
-        String groupAddress;
-    }
 
     private Distributed(String name){
-        String port;
-        String groupAddress;
         this.name = name;
     }
-
 
     public static void main(String[] args) {
         System.out.println("Hello Distributed!");
         Scanner scan = new Scanner(System.in);  // Reading from System.in
+        System.out.println("[" + DISTRIBUTED + "] " + "Server name : ");
+        String name = scan.next();
+        Distributed d = new Distributed(name);
 
+        //TODO gestion des threads
+        System.out.println("Name main thread : " + Thread.currentThread().getName());
+        d.initialize(scan);
+        d.connexionToMulticast();
+        scan.close();
+    }
+
+    private void initialize(Scanner scan){
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast IP : ");
+        multicastIP = scan.next();
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast port : ");
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
+            scan.next();
+        }
+        multicastPort = scan.nextInt();
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Request IP: ");
+        requestIP = scan.next();
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Request port : ");
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
+            scan.next();
+        }
+        requestPort = scan.nextInt();
+    }
+
+    private void connexionToMulticast(){
+        System.out.println("JE RENTRE ICI");
         InetAddress groupAddress;
         MulticastSocket socketMulticast;
 
-            //TODO : initialization du district
+        //TODO : to change, only a test --> send message when occur a change
+        // Open a new DatagramSocket, which will be used to send the data.
         try {
-            socketMulticast = new MulticastSocket(port);
-            groupAddress = InetAddress.getByName(group);
+            socketMulticast = new MulticastSocket(multicastPort);
+            groupAddress = InetAddress.getByName(multicastIP);
 
-            socketMulticast.joinGroup(groupAddress); // unirse a grupo de multicast
+            DatagramSocket serverSocket = new DatagramSocket();
+            for (int i = 0; i < 5; i++) {
+                String msg = "Sent message no " + i;
 
+                // Create a packet that will contain the data
+                // (in the form of bytes) and send it.
+                DatagramPacket msgPacket = new DatagramPacket(msg.getBytes(),
+                        msg.getBytes().length, groupAddress, multicastPort);
+                serverSocket.send(msgPacket);
+
+                System.out.println("Server sent packet with msg: " + msg);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        //TODO to change, only the client listen in the mutlicast
+        /*
+        try {
+            socketMulticast = new MulticastSocket(multicastPort);
+            groupAddress = InetAddress.getByName(multicastIP);
+
+            socketMulticast.joinGroup(groupAddress); //join the multicast group
             // Listening to a message
             while (true) {
+                System.out.println("test");
                 byte[] buffer = new byte[100];
                 DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
+                System.out.println(datagram);
                 socketMulticast.receive(datagram);
                 String message = new String(datagram.getData());
                 System.out.println("Message received : "+message);
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
-        scan.close();
+        */
     }
 
 
-    private void selectPortAddress(Scanner scan){
-        System.out.println("Select a port : ");
-        String port = scan.next();
-
-        System.out.println("Select a group address : ");
-        String address = scan.next();
-
-    }
-
-        //TODO call this function only in a specific district
     private void TitanPublication(Scanner scan){
-        System.out.println("[ " + DISTRIBUTED + name + "] " + "Publish titan : ");
-        System.out.println("[ " + DISTRIBUTED + name + "] " + "Enter a name : ");
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Publish titan");
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Enter a name : ");
         String titanName = scan.next();
-        System.out.println("[ " + DISTRIBUTED + name + "] " + "Select a type : ");
+        System.out.println("[ " + DISTRIBUTED + name + " ] " + "Select a type : ");
         System.out.println("1.-" + Const.TYPE_TITAN_NORMAL);
         System.out.println("2.-" + Const.TYPE_TITAN_ECCENTRIC);
         System.out.println("3.-" + Const.TYPE_TITAN_INCONSTANT);
         int i = scan.nextInt();
         String type = null;
         switch(i){
-            case(1):type=Const.TYPE_TITAN_NORMAL;
-            case(2):type=Const.TYPE_TITAN_ECCENTRIC;
-            case(3):type=Const.TYPE_TITAN_INCONSTANT;
+            case(1):type=Const.TYPE_TITAN_NORMAL; break;
+            case(2):type=Const.TYPE_TITAN_ECCENTRIC; break;
+            case(3):type=Const.TYPE_TITAN_INCONSTANT; break;
         }
         //TODO : envoyer un message au serveur central pour demander un id
-        ID_generator id_g = new ID_generator();
-        Titans newTitan = new Titans(titanName, id_g.newID(), type, name);
+        Titans newTitan = new Titans(titanName, type, name);
         titansList.add(newTitan);
-        System.out.println("[ " + DISTRIBUTED + name + "] " + "A titan has been published : ");
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "A titan has been published : ");
         System.out.println("************");
         System.out.println("ID: " + newTitan.getID());
         System.out.println("Name: " + newTitan.getName());

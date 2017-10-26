@@ -5,25 +5,25 @@ import Util.*;
 
 public class District {
     String name;
-    String ipMulticast;
-    String puertoMulticast;
-    String ipPeticiones;
-    String puertoPeticiones;
+    String multicastIP;
+    int multicastPort;
+    String requestIP;
+    int requestPort;
 
-    public District(String name, String ipMulticast, String puertoMulticast, String ipPeticiones, String puertoPeticiones) {
+    public District(String name, String ipMulticast, int puertoMulticast, String requestIP, int requestPort) {
         this.name = name;
-        this.ipMulticast = ipMulticast;
-        this.puertoMulticast = puertoMulticast;
-        this.ipPeticiones = ipPeticiones;
-        this.puertoPeticiones = puertoPeticiones;
+        this.multicastIP = ipMulticast;
+        this.multicastPort = puertoMulticast;
+        this.requestIP = requestIP;
+        this.requestPort = requestPort;
     }
 
     @Override
     public String toString() {
         return "Nombre:'" + name + ',' +
-                ", IP Multicast:'" + ipMulticast + ',' +
-                ", Puerto Multicast:'" + puertoMulticast + ',' +
-                ", IP Peticiones:'" + ipPeticiones + ',' +
-                ", Puerto Peticiones:'" + puertoPeticiones;
+                ", IP Multicast:'" + multicastIP + ',' +
+                ", Puerto Multicast:'" + multicastPort + ',' +
+                ", IP Peticiones:'" + requestIP + ',' +
+                ", Puerto Peticiones:'" + requestPort;
     }
 }
