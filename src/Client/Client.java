@@ -2,7 +2,7 @@ package Client;
 
 import Creature.Titans;
 import Util.Const;
-import Util.MessageBrocker;
+import Util.MessageBroker;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -36,23 +36,47 @@ public class Client {
     }
 
     private void connectionServer(Scanner scan){
-/*
+
+		//TODO TO REMOVE
 		//TEEEEESTT TO REMOVE !!!! Je l'ai laissé pour vous ;)
 
+		/*
+
 		System.out.println("m2  ");
-		MessageBrocker m2 = new MessageBrocker();
+		MessageBroker m2 = new MessageBroker();
 		m2.put("teeest0", "coucou");
 		String s = m2.toJson(); //utiliser pour envoyer en message
 		System.out.println(s);
 		m2.put("other", "hihi");
 		m2.put("n", 1);
 		s = m2.toJson();
-		MessageBrocker m = new MessageBrocker(s); //récupérer le message recut et récupe les attributs
+		MessageBroker m = new MessageBroker(s); //récupérer le message recut et récupe les attributs
 		System.out.println(m.getStringValue("other"));
 		System.out.println(m.getIntegerValue("n"));
-	//TO REMOVE
+
+
+		System.out.println("------------");
+
+		//test avec titan et list de titan
+		MessageBroker m4 = new MessageBroker();
+		Titans newTitan = new Titans("Hero", 1, Const.TYPE_TITAN_NORMAL, "TROST");
+		Titans newTitan2 = new Titans("Hero2", 2, Const.TYPE_TITAN_NORMAL, "TROST2");
+		ArrayList<Titans> listTitan = new ArrayList<Titans>();
+		listTitan.add(newTitan);
+		listTitan.add(newTitan2);
+		m4.put("un titan", (Serializable) newTitan);
+		m4.put(Const.REQ_TITAN_LIST, (Serializable) listTitan);
+		String s4 = m4.toJson();
+		System.out.println(s4);
+		MessageBroker m5 = new MessageBroker(s4);
+		ArrayList<Titans> list = m5.getListTitansValue(Const.REQ_TITAN_LIST);
+		System.out.println("NAME  : " + list.get(1).getName());
+		Titans titanTest = m5.getTitansValue("un titan");
+		System.out.println("NAME 2 : " + titanTest.getName());
+
 
 */
+
 
         System.out.println(CLIENT+"Enter IP Server Central:");
         //TODO Remove when it will matter
@@ -110,7 +134,7 @@ public class Client {
 				InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 				BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 				String messageReceived = bufferedReader.readLine();
-				MessageBrocker mb = new MessageBrocker(messageReceived);
+				MessageBroker mb = new MessageBroker(messageReceived);
 				portDistrict = mb.getIntegerValue("portDistrict");
 				ipDistrict = mb.getStringValue("ipDistrict");
 				//TODO connect to the multicast of the District

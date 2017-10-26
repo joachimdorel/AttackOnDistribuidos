@@ -6,8 +6,15 @@ package Util;
 public class Const {
 
     //----------Titan variables
-    public enum Type {NORMAL, ECCENTRIC, INCONSTANT}
-    public enum State {FREE, CAPTURED, DEAD};
+//    public enum Type {NORMAL, ECCENTRIC, INCONSTANT}
+//    public enum State {FREE, CAPTURED, DEAD};
+    //TODO add a list of states and types
+    public static final String TYPE_TITAN_NORMAL = "NORMAL";
+    public static final String TYPE_TITAN_ECCENTRIC = "ECCENTRIC";
+    public static final String TYPE_TITAN_INCONSTANT = "INCONSTANT";
+    public static final String STATE_TITAN_FREE = "FREE";
+    public static final String STATE_TITAN_CAPTURED = "CAPTURED";
+    public static final String STATE_TITAN_DEAD = "DEAD";
 
     //----------Request value
     public static final String REQ_TYPE = "type";
