@@ -59,8 +59,8 @@ public class Client {
 
 		//test avec titan et list de titan
 		MessageBroker m4 = new MessageBroker();
-		Titans newTitan = new Titans("Hero", 1, Const.TYPE_TITAN_NORMAL, "TROST");
-		Titans newTitan2 = new Titans("Hero2", 2, Const.TYPE_TITAN_NORMAL, "TROST2");
+		Titans newTitan = new Titans("Hero", Const.TYPE_TITAN_NORMAL, "TROST");
+		Titans newTitan2 = new Titans("Hero2", Const.TYPE_TITAN_NORMAL, "TROST2");
 		ArrayList<Titans> listTitan = new ArrayList<Titans>();
 		listTitan.add(newTitan);
 		listTitan.add(newTitan2);
@@ -75,7 +75,7 @@ public class Client {
 		System.out.println("NAME 2 : " + titanTest.getName());
 
 
-*/
+//*/
 
 
         System.out.println(CLIENT+"Enter IP Server Central:");
