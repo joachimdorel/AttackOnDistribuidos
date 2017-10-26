@@ -1,11 +1,11 @@
 package Util;
 
+import Creature.Titans;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Allow JSON strings parsing into the equivalent key-value map
@@ -14,14 +14,14 @@ import java.util.Map;
 
 //TODO : rajouter pour le traitement des listes et des objets (liste de titan)
 
-public class MessageBrocker {
+public class MessageBroker {
     /**
      * A encapsulated map representing some message
      */
     private Map<String, Object> map;
     private static ObjectMapper mapper = new ObjectMapper();
 
-    public MessageBrocker() {
+    public MessageBroker() {
         map = new HashMap<String, Object>();
     }
 
@@ -30,7 +30,7 @@ public class MessageBrocker {
      *
      * @param content a given JSON string
      */
-    public MessageBrocker(String content) {
+    public MessageBroker(String content) {
         parse(content);
     }
 
@@ -40,7 +40,7 @@ public class MessageBrocker {
      * @param key   any given key
      * @param value any given value
      */
-    public MessageBrocker(String key, Object value) {
+    public MessageBroker(String key, Object value) {
         Map<String, Object> map = new HashMap<String, Object>();
         map.put(key, value);
         this.map = map;
@@ -95,6 +95,33 @@ public class MessageBrocker {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    public Titans getTitansValue(String key) {
+        Object value = map.get(key);
+        //TODO check the cast
+        return Titans.valueOf((LinkedHashMap<String, Object>) value);
+    }
+
+    public ArrayList<Titans> getListTitansValue(String key) {
+        Object value = map.get(key);
+
+        //noinspection unchecked
+        List<Object> obj = (List<Object>) value;
+        if (obj == null)
+            return null;
+        ArrayList<Titans> res = new ArrayList<Titans>();
+        for (Object o : obj) {
+            System.out.println(o.getClass());
+            try{
+                //TODO check the cast
+                res.add(Titans.valueOf((LinkedHashMap<String, Object>) o));
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+
+        }
+        return res;
     }
 
     /**

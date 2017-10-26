@@ -92,20 +92,15 @@ public class Distributed {
         System.out.println("[ " + DISTRIBUTED + name + "] " + "Enter a name : ");
         String titanName = scan.next();
         System.out.println("[ " + DISTRIBUTED + name + "] " + "Select a type : ");
-        System.out.println("1.-" + Const.Type.NORMAL);
-        System.out.println("2.-" + Const.Type.ECCENTRIC);
-        System.out.println("3.-" + Const.Type.INCONSTANT);
+        System.out.println("1.-" + Const.TYPE_TITAN_NORMAL);
+        System.out.println("2.-" + Const.TYPE_TITAN_ECCENTRIC);
+        System.out.println("3.-" + Const.TYPE_TITAN_INCONSTANT);
         int i = scan.nextInt();
-        Const.Type type;
-        if (i == 1){
-            type = Const.Type.NORMAL;
-        } else if (i == 2){
-            type = Const.Type.ECCENTRIC;
-        } else if (i == 3){
-            type = Const.Type.INCONSTANT;
-        } else {
-            //TODO remove - erreur
-            type = Const.Type.NORMAL;
+        String type = null;
+        switch(i){
+            case(1):type=Const.TYPE_TITAN_NORMAL;
+            case(2):type=Const.TYPE_TITAN_ECCENTRIC;
+            case(3):type=Const.TYPE_TITAN_INCONSTANT;
         }
         //TODO : envoyer un message au serveur central pour demander un id
         ID_generator id_g = new ID_generator();
