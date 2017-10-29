@@ -17,11 +17,19 @@ public class Central {
     private List<District> districts;
     private List<Client> clients;
 
+    /**
+     * Constructor
+     */
     public Central(){
         districts= new ArrayList<District>();
     }
 
     public static void main(String[] args) {
+
+        //TODO Remove
+        // District d1 = new District("D1", )
+        //End of TODO
+
         System.out.println(SERVER_CENTRAL);
         Scanner scan = new Scanner(System.in);  // Reading from System.in
         Central c1 = new Central();
@@ -33,6 +41,10 @@ public class Central {
         scan.close();
     }
 
+    /**
+     * To add a new district in the Central
+     * @param scan
+     */
     public void addDistrict(Scanner scan){
         System.out.println("ADD DISTRICT");
         System.out.println(SERVER_CENTRAL+"District Name:");
@@ -57,6 +69,10 @@ public class Central {
         this.districts.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
     }
 
+    /**
+     * Method to authorize a Client to connect to a Distributed Server
+     * @param scan
+     */
     private void waitAuthorization(Scanner scan){
         ServerSocket serverSocket;
         Socket socket;
@@ -73,6 +89,7 @@ public class Central {
                 ClientDistrict = String.valueOf(objectInputStream.readObject());
                 //TODO Search the district corresponding in List<District> districts
                 //districtReturned = district.getDistrictByName ? ---> The function is not coded yet...
+                //The function return a messageBrocker
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }

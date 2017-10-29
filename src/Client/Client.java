@@ -35,6 +35,10 @@ public class Client {
         scan.close();
     }
 
+    /**
+     * Fonction connecting the Client to the Server
+     * @param scan
+     */
     private void connectionServer(Scanner scan){
 
 		//TODO TO REMOVE
@@ -93,9 +97,11 @@ public class Client {
 		connectDistrict(scan);
     }
 
-
-	// function asks the client which district he wants to connect to,
-    // and try to connect the client to the district he will enter the name of
+    /**
+     * Function asks the client which district he wants to connect to,
+     * and try to connect the client to the district he will enter the name
+     * @param scan
+     */
 	private void connectDistrict(Scanner scan){
         System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
         //TODO Remove when it will matter + print a list of existing District
@@ -110,9 +116,13 @@ public class Client {
         }
 	}
 
-
-	// function that take the port, ip address of the central server, and name of the wanted district,
-	// and ask the connection authorization to the central server. Return true if success, false if fail.
+	//TODO what is our way to identify a district ?
+    /**
+     * Function that take the port, ip address of the central server, and name of the wanted district,
+     * and ask the connection authorization to the central server. Return true if success, false if fail.
+     * @param districtName
+     * @return
+     */
     private boolean askServerCentral(String districtName) {
         Socket socket;
         Boolean responseFromServer = null;
@@ -122,9 +132,13 @@ public class Client {
             socket = new Socket(InetAddress.getLocalHost(), portServer);
             //socket = new Socket(ipServer, portServer);
 
+			MessageBroker mbClient = new MessageBroker();
+			mbClient.put("districtName", districtName);
+
+
             OutputStream outputStream = socket.getOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(String.valueOf(districtName));
+            objectOutputStream.writeObject(String.valueOf(mbClient));
             System.out.println("Message sent to the server");
 
             InputStream inputStream = socket.getInputStream();
@@ -153,7 +167,10 @@ public class Client {
     }
 
 
-
+    /**
+     * Function displaying the menu and switching between the modes
+     * @param scan
+     */
     private void openMenu(Scanner scan){
 		int choice;
 		System.out.println("    -    ");
@@ -243,22 +260,35 @@ public class Client {
 		
     }
 
-	//function void used in the menu, to show a list of titans of the table entered in parameter
+    /**
+     * Function void used in the menu, to show a list of titans of the table entered in parameter
+     * @param tab
+     */
 	private void showListTitans(ArrayList<Titans> tab){
 		System.out.println("-------------------------------");
 		for (Titans titan : tab)
 			System.out.println(titan.getName() + ", ID : " + titan.getID() + ", type: " + titan.getType());
 	}
 
-	// boolean function used in the menu to ask the district (port and ip address in parameter) to capture a titan (id en parameter). return true if success, false if fail.
-	private boolean captureTitan(int idTitan){
+    /**
+     * boolean function used in the menu to ask the district (port and ip address in parameter) to capture
+     * a titan (id en parameter)
+     * @param idTitan id of the Titan you want to capture
+     * @return true is the titan is captured, false otherwise
+     */
+    private boolean captureTitan(int idTitan){
 		boolean captured=false;
 		//TODO write the code of the function, that send message to the district to ask to capture the titan, and get the response back. return true if success, false if fail. +++ actualize the table from here
 		//CAUTION: the titan has to be normal or inconstant
 		return captured;
 	}
 
-	// boolean function used in the menu to ask the district (port and ip address in parameter) to kill a titan (id en parameter). return true if success, false if fail.
+    /**
+     * 	// boolean function used in the menu to ask the district (port and ip address in parameter) to kill a titan
+     * 	(id en parameter)
+     * @param idTitan
+     * @return true is the titan is killed, false otherwise
+     */
 	private boolean killTitan(int idTitan){
 		boolean killed=false;
 		//TODO write the code of the function, that send message to the district to ask to kill the titan, and get the response back. return true if success, false if fail. +++ actualize the table from here
