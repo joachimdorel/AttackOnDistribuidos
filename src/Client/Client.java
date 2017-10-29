@@ -3,9 +3,12 @@ package Client;
 import Creature.Titans;
 import Util.Const;
 import Util.MessageBroker;
-
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.annotation.*;
 import java.io.*;
-import java.net.InetAddress;
+import java.net.*;
+import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -14,33 +17,84 @@ import java.util.Scanner;
 public class Client {
 
     private static final String CLIENT = "[CLIENT] ";
-    private String ipServer;
-    private int portServer;
-    private String ipDistrict;
-    private int portDistrict;
-    //TODO : change structure ?? les tableaux ne sont pas dynamique --> use LinkedList ?!
-    private ArrayList<Titans> tabDistrictTitans = new ArrayList<Titans>();
-    private ArrayList<Titans> tabCapturedTitans = new ArrayList<Titans>();
-    private ArrayList<Titans> tabKilledTitans = new ArrayList<Titans>();
+    private  String ipServer;
+    private  int portServer;
+    private  String ipDistrict;
+    private  int portDistrict;
+	private  Socket socketMulti;
+	private  int portMulticast;
+	private  String IPMulticast;
+    private  ArrayList<Titans> tabDistrictTitans = new ArrayList<Titans>();
+    private  ArrayList<Titans> tabCapturedTitans = new ArrayList<Titans>();
+    private  ArrayList<Titans> tabKilledTitans = new ArrayList<Titans>();
 
 	//TODO create the 2 threads (thread principal = send thread ; listening thread will be overwrited when changing of district)
-	//TODO tab of District Titans synchronize methods
+	//TODO lists of District Titans : synchronization methods
 	//TODO menu : switch between options : write each method
 
     public static void main(String[] args) {
         System.out.println(CLIENT);
         Client c=new Client();
 		Scanner scan = new Scanner(System.in);  // Reading from System.in
-        c.connectionServer(scan);
+        //c.connectionServer(scan);
+
+		//c.connectDistrict(scan);
+		//Thread threadMessageMulti = new Thread(new MulticastListener());
+		//threadMessageMulti.start();
+		//System.out.println("Thread d'écoute d emessages sur le multicast lancé!");
+
+		c.openMenu(scan);
+
         scan.close();
+		
     }
+
+
+
+class Recepteur extends Thread {
+	   InetAddress groupeIP;
+	   int port;
+	   String nom;
+	   MulticastSocket socketReception;
+
+	   Recepteur(InetAddress groupeIP, int port, String nom)  throws Exception { 
+		   this.groupeIP = groupeIP;
+		   this.port = port;
+		   this.nom = nom;
+		   socketReception = new MulticastSocket(port);
+		   socketReception.joinGroup(groupeIP);
+		   start();
+	  }
+
+	  public void run() {
+	    DatagramPacket message;
+	    byte[] contenuMessage;
+	    String texte;
+	    ByteArrayInputStream lecteur;
+	    
+	    while(true) {
+			  contenuMessage = new byte[1024];
+			  message = new DatagramPacket(contenuMessage, contenuMessage.length);
+			  try {
+		            socketReception.receive(message);
+		            texte =(String) (new DataInputStream(new ByteArrayInputStream(contenuMessage))).readUTF();
+					MessageBroker messageListe = new MessageBroker(texte);
+					tabDistrictTitans = messageListe.getListTitansValue(Const.REQ_TITAN_LIST);
+		            System.out.println(texte);
+			  }
+			  catch(Exception exc) {
+		    		System.out.println(exc);
+			  }
+	    }
+	  }
+	}
+
 
     /**
      * Fonction connecting the Client to the Server
      * @param scan
      */
-    private void connectionServer(Scanner scan){
-
+    private  void connectionServer(Scanner scan){
 		//TODO TO REMOVE
 		//TEEEEESTT TO REMOVE !!!! Je l'ai laissé pour vous ;)
 
@@ -97,24 +151,29 @@ public class Client {
 		connectDistrict(scan);
     }
 
+
     /**
      * Function asks the client which district he wants to connect to,
      * and try to connect the client to the district he will enter the name
      * @param scan
      */
-	private void connectDistrict(Scanner scan){
-        System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
-        //TODO Remove when it will matter + print a list of existing District
-        System.out.println(CLIENT+"Currently does not matter");
-        String districtName = scan.next();
-
-        if(this.askServerCentral(districtName)) {
+	private  void connectDistrict(Scanner scan){
+		System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
+		//TODO Remove when it will matter + print a list of existing District
+		System.out.println(CLIENT+"Currently does not matter");
+		String districtName = scan.next();
+		//TODO check connection
+		if(askServerCentral(districtName)) {
+			InetAddress groupeIP=InetAddress.getByName(IPMulticast);
+			int port= portMulticast;
+			new Recepteur(groupeIP,port,districtName);
 			System.out.println("You are now connected to " + districtName + " !");
-            openMenu(scan);
-        }else{
-            System.out.println("Authorization refused from the server central.");
-        }
+		    openMenu(scan);
+		}else{
+		    System.out.println("Authorization refused from the server central.");
+		}
 	}
+
 
 	//TODO what is our way to identify a district ?
     /**
@@ -151,7 +210,11 @@ public class Client {
 				MessageBroker mb = new MessageBroker(messageReceived);
 				portDistrict = mb.getIntegerValue("portDistrict");
 				ipDistrict = mb.getStringValue("ipDistrict");
+				IPMulticast = mb.getStringValue("ipMulticast");
+				portMulticast=mb.getIntegerValue("portMulticast");
+				//TODO CHANGER DU COTE DU SERVEUR CENTRAL POUR ENVOYER LES DONNÉES DU MULTICAST!!!
 				//TODO connect to the multicast of the District
+				
 			}
 
             inputStream.close();
@@ -167,11 +230,13 @@ public class Client {
     }
 
 
+
     /**
      * Function displaying the menu and switching between the modes
      * @param scan
      */
     private void openMenu(Scanner scan){
+
 		int choice;
 		System.out.println("    -    ");
         System.out.println(CLIENT+"Console");
@@ -260,6 +325,7 @@ public class Client {
 		
     }
 
+
     /**
      * Function void used in the menu, to show a list of titans of the table entered in parameter
      * @param tab
@@ -269,6 +335,7 @@ public class Client {
 		for (Titans titan : tab)
 			System.out.println(titan.getName() + ", ID : " + titan.getID() + ", type: " + titan.getType());
 	}
+
 
     /**
      * boolean function used in the menu to ask the district (port and ip address in parameter) to capture
@@ -282,6 +349,7 @@ public class Client {
 		//CAUTION: the titan has to be normal or inconstant
 		return captured;
 	}
+
 
     /**
      * 	// boolean function used in the menu to ask the district (port and ip address in parameter) to kill a titan

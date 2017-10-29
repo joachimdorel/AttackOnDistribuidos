@@ -1,14 +1,17 @@
 package Distributed;
 
-import Creature.Titans;
-import Server.Central;
-import Util.Const;
-import Util.MessageBroker;
+import Creature.*;
+import Util.*;
 
-import java.io.IOException;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.annotation.*;
+
+import java.util.*;
+import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.lang.*;
+
 
 /**
  * A distributed file system is a client/server-based application that allows clients
@@ -29,6 +32,8 @@ public class Distributed {
     //The group address must be in the range 224.0.0.0 to 239.255.255.255
     private String multicastIP; //it is the group address
     private int multicastPort;
+	private InetAddress groupAddress; //InetAddress du multicast
+	MulticastSocket socketMulticast;
     private String requestIP;
     private int requestPort;
     private String centralServerIP;
@@ -85,14 +90,13 @@ public class Distributed {
 
     private void connexionToMulticast(){
         System.out.println("JE RENTRE ICI");
-        InetAddress groupAddress;
-        MulticastSocket socketMulticast;
-
+		
         //TODO : to change, only a test --> send message when occur a change
         // Open a new DatagramSocket, which will be used to send the data.
         try {
             socketMulticast = new MulticastSocket(multicastPort);
             groupAddress = InetAddress.getByName(multicastIP);
+			socketMulticast.setTimeToLive(15);
 
             DatagramSocket serverSocket = new DatagramSocket();
             for (int i = 0; i < 5; i++) {
@@ -101,7 +105,7 @@ public class Distributed {
                 // Create a packet that will contain the data
                 // (in the form of bytes) and send it.
                 DatagramPacket msgPacket = new DatagramPacket(msg.getBytes(),
-                        msg.getBytes().length, groupAddress, multicastPort);
+                msg.getBytes().length, groupAddress, multicastPort);
                 serverSocket.send(msgPacket);
 
                 System.out.println("Server sent packet with msg: " + msg);
@@ -160,7 +164,11 @@ public class Distributed {
         System.out.println("Type: " + newTitan.getType());
         System.out.println("************");
 
+		sendTitansListMulticast();
+	
+
     }
+
 
     //TODO : think about this function
     private int requestID(){
@@ -203,4 +211,33 @@ public class Distributed {
         }
         return newId;
     }
+
+	private void sendTitansListMulticast(){
+			byte[] contenuMessage;
+			DatagramPacket message;
+
+			MessageBroker listToSend = new MessageBroker();
+			String stringToSend;
+			listToSend.put(Const.REQ_TITAN_LIST, (Serializable) titansList);
+			stringToSend=listToSend.toJson();
+			ByteArrayOutputStream sortie = 	new ByteArrayOutputStream(); 
+
+			(new DataOutputStream(sortie)).writeUTF(stringToSend); 
+			contenuMessage = sortie.toByteArray();
+			message = new DatagramPacket(contenuMessage, contenuMessage.length, groupAddress, multicastPort);
+			socketMulticast.send(message);
+	  
+		
+	}
+	//TODO
+	/*private void captureRequest(int id){
+		
+	}
+
+
+	private void killRequest(int id){
+		
+	}*/
+	
+
 }
