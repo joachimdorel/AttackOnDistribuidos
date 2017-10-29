@@ -3,9 +3,6 @@ package Client;
 import Creature.Titans;
 import Util.Const;
 import Util.MessageBroker;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.annotation.*;
 import java.io.*;
 import java.net.*;
 import java.net.MulticastSocket;
@@ -32,7 +29,7 @@ public class Client {
 	//TODO lists of District Titans : synchronization methods
 	//TODO menu : switch between options : write each method
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         System.out.println(CLIENT);
         Client c=new Client();
 		Scanner scan = new Scanner(System.in);  // Reading from System.in
@@ -94,7 +91,7 @@ class Recepteur extends Thread {
      * Fonction connecting the Client to the Server
      * @param scan
      */
-    private  void connectionServer(Scanner scan){
+    private  void connectionServer(Scanner scan) throws Exception {
 		//TODO TO REMOVE
 		//TEEEEESTT TO REMOVE !!!! Je l'ai laissé pour vous ;)
 
@@ -157,7 +154,7 @@ class Recepteur extends Thread {
      * and try to connect the client to the district he will enter the name
      * @param scan
      */
-	private  void connectDistrict(Scanner scan){
+	private  void connectDistrict(Scanner scan) throws Exception {
 		System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
 		//TODO Remove when it will matter + print a list of existing District
 		System.out.println(CLIENT+"Currently does not matter");
@@ -235,7 +232,7 @@ class Recepteur extends Thread {
      * Function displaying the menu and switching between the modes
      * @param scan
      */
-    private void openMenu(Scanner scan){
+    private void openMenu(Scanner scan) throws Exception {
 
 		int choice;
 		System.out.println("    -    ");

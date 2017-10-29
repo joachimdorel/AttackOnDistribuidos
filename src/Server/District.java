@@ -4,11 +4,11 @@ import Creature.Titans;
 import Util.*;
 
 public class District {
-    String name;
-    String multicastIP;
-    int multicastPort;
-    String requestIP;
-    int requestPort;
+    private String name;
+    private String multicastIP;
+    private int multicastPort;
+    private String requestIP;
+    private int requestPort;
 
     public District(String name, String ipMulticast, int puertoMulticast, String requestIP, int requestPort) {
         this.name = name;
@@ -16,6 +16,26 @@ public class District {
         this.multicastPort = puertoMulticast;
         this.requestIP = requestIP;
         this.requestPort = requestPort;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getMulticastPort() {
+        return multicastPort;
+    }
+
+    public String getMulticastIP() {
+        return multicastIP;
+    }
+
+    public int getRequestPort() {
+        return requestPort;
+    }
+
+    public String getRequestIP() {
+        return requestIP;
     }
 
     @Override

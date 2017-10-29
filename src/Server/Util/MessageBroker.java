@@ -1,4 +1,4 @@
-package Util;
+package Server.Util;
 
 import Creature.Titans;
 import java.lang.*;

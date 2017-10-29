@@ -2,11 +2,6 @@ package Distributed;
 
 import Creature.*;
 import Util.*;
-
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.core.*;
-import com.fasterxml.jackson.annotation.*;
-
 import java.util.*;
 import java.io.*;
 import java.net.*;
@@ -45,7 +40,7 @@ public class Distributed {
         this.name = name;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         System.out.println("Hello Distributed!");
         Scanner scan = new Scanner(System.in);  // Reading from System.in
         System.out.println("[" + DISTRIBUTED + "] " + "Server name : ");
@@ -56,7 +51,7 @@ public class Distributed {
         System.out.println("Name main thread : " + Thread.currentThread().getName());
         d.initialize(scan);
         d.TitanPublication(scan);
-        //d.connexionToMulticast();
+        //d.connectionToMulticast();
         scan.close();
     }
 
@@ -88,9 +83,11 @@ public class Distributed {
         centralServerPort = scan.nextInt();
     }
 
-    private void connexionToMulticast(){
-        System.out.println("JE RENTRE ICI");
-		
+
+    //TODO : send a mensage to the multicast each time there is a modification
+    private void connectionToMulticast(){
+        InetAddress groupAddress;
+        MulticastSocket socketMulticast;
         //TODO : to change, only a test --> send message when occur a change
         // Open a new DatagramSocket, which will be used to send the data.
         try {
@@ -102,7 +99,7 @@ public class Distributed {
             for (int i = 0; i < 5; i++) {
                 String msg = "Sent message no " + i;
 
-                // Create a packet that will contain the data
+                // TODO Create a packet that will contain the data
                 // (in the form of bytes) and send it.
                 DatagramPacket msgPacket = new DatagramPacket(msg.getBytes(),
                 msg.getBytes().length, groupAddress, multicastPort);
@@ -113,33 +110,10 @@ public class Distributed {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
-        //TODO to change, only the client listen in the mutlicast
-        /*
-        try {
-            socketMulticast = new MulticastSocket(multicastPort);
-            groupAddress = InetAddress.getByName(multicastIP);
-
-            socketMulticast.joinGroup(groupAddress); //join the multicast group
-            // Listening to a message
-            while (true) {
-                System.out.println("test");
-                byte[] buffer = new byte[100];
-                DatagramPacket datagram = new DatagramPacket(buffer, buffer.length);
-                System.out.println(datagram);
-                socketMulticast.receive(datagram);
-                String message = new String(datagram.getData());
-                System.out.println("Message received : "+message);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
     }
 
 
-    private void TitanPublication(Scanner scan){
+    private void TitanPublication(Scanner scan) throws IOException {
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Publish titan");
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Enter a name : ");
         String titanName = scan.next();
@@ -165,8 +139,6 @@ public class Distributed {
         System.out.println("************");
 
 		sendTitansListMulticast();
-	
-
     }
 
 
@@ -183,10 +155,9 @@ public class Distributed {
             byte[] sendRequest;
             sendRequest = request.getBytes();
             System.out.println("---- ready to send data");
-            //TODO to change
-            InetAddress IPCentralAdress = InetAddress.getByName(centralServerIP);
+            InetAddress IPCentralAddress = InetAddress.getByName(centralServerIP);
             final DatagramPacket sendPacket = new DatagramPacket(
-                    sendRequest, sendRequest.length,IPCentralAdress, centralServerPort);
+                    sendRequest, sendRequest.length,IPCentralAddress, centralServerPort);
             socket.send(sendPacket);
             socket.setSoTimeout(10000);
             try{
@@ -212,7 +183,7 @@ public class Distributed {
         return newId;
     }
 
-	private void sendTitansListMulticast(){
+	private void sendTitansListMulticast() throws IOException {
 			byte[] contenuMessage;
 			DatagramPacket message;
 
