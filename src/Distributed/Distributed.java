@@ -1,13 +1,12 @@
 package Distributed;
 
 import Creature.Titans;
+import Server.Central;
 import Util.Const;
+import Util.MessageBroker;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -32,6 +31,8 @@ public class Distributed {
     private int multicastPort;
     private String requestIP;
     private int requestPort;
+    private String centralServerIP;
+    private int centralServerPort;
     private ArrayList<Titans> titansList = new ArrayList<Titans>();
 
 
@@ -49,7 +50,8 @@ public class Distributed {
         //TODO gestion des threads
         System.out.println("Name main thread : " + Thread.currentThread().getName());
         d.initialize(scan);
-        d.connexionToMulticast();
+        d.TitanPublication(scan);
+        //d.connexionToMulticast();
         scan.close();
     }
 
@@ -70,6 +72,15 @@ public class Distributed {
             scan.next();
         }
         requestPort = scan.nextInt();
+        //We ask the central server data to can connect to it and ask him a unique id
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Central server IP: ");
+        centralServerIP = scan.next();
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Central server port : ");
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
+            scan.next();
+        }
+        centralServerPort = scan.nextInt();
     }
 
     private void connexionToMulticast(){
@@ -139,8 +150,8 @@ public class Distributed {
             case(2):type=Const.TYPE_TITAN_ECCENTRIC; break;
             case(3):type=Const.TYPE_TITAN_INCONSTANT; break;
         }
-        //TODO : envoyer un message au serveur central pour demander un id
-        Titans newTitan = new Titans(titanName, type, name);
+        int id = requestID();
+        Titans newTitan = new Titans(titanName, type, id, name);
         titansList.add(newTitan);
         System.out.println("[" + DISTRIBUTED + name + " ] " + "A titan has been published : ");
         System.out.println("************");
@@ -149,5 +160,47 @@ public class Distributed {
         System.out.println("Type: " + newTitan.getType());
         System.out.println("************");
 
+    }
+
+    //TODO : think about this function
+    private int requestID(){
+        int newId = -1;
+        MessageBroker mb = new MessageBroker();
+        mb.put(Const.REQ_TYPE,Const.REQ_NEW_ID);
+        String request = mb.toJson();
+        try{
+            final DatagramSocket socket = new DatagramSocket();
+            final byte[] receiveData = new byte[100];
+            final DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+            byte[] sendRequest;
+            sendRequest = request.getBytes();
+            System.out.println("---- ready to send data");
+            //TODO to change
+            InetAddress IPCentralAdress = InetAddress.getByName(centralServerIP);
+            final DatagramPacket sendPacket = new DatagramPacket(
+                    sendRequest, sendRequest.length,IPCentralAdress, centralServerPort);
+            socket.send(sendPacket);
+            socket.setSoTimeout(10000);
+            try{
+                socket.receive(receivePacket);
+                final MessageBroker dataReceived = new MessageBroker(new String(receivePacket.getData()));
+                newId = dataReceived.getIntegerValue(Const.REQ_CONTENT);
+                final InetAddress returnIPAddress = receivePacket.getAddress();
+                final int port = receivePacket.getPort();
+                System.out.println("From server at: " + returnIPAddress + ":"
+                        + port);
+                System.out.println("Message: " + dataReceived.toJson());
+            } catch (final SocketTimeoutException ste){
+                System.out.println("Timeout Occurrend : Packet assumed lost");
+            }
+            socket.close();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return newId;
     }
 }

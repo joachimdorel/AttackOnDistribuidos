@@ -16,12 +16,10 @@ public class Titans implements Serializable{
     private String type;
     private String status;
     private String district;
-    //Static variable, allows to have a unique ID for each titan
-    private static Integer generator_ID = 1;
 
-    public Titans(String name, String type, String district) {
+    public Titans(String name, String type, int id, String district) {
         this.name = name;
-        this.ID = generator_ID++;
+        this.ID = id;
         this.type = type;
         this.status = Const.STATE_TITAN_FREE;
         this.district = district;
