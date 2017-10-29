@@ -28,4 +28,12 @@ public class Const {
     //Request client -> central server
     public static final String REQ_CHOSE_DISTRICT = "chose_district";
     public static final String REQ_DISTRICT_LIST = "district_list";
+
+    public static final String KEY_DISTRICT_PORT = "portDistrict";
+    public static final String KEY_DISTRICT_IP = "ipDistrict";
+    public static final String KEY_DISTRICT_MULTICAST_IP = "ipMulticast";
+    public static final String KEY_DISTRICT_MULTICAST_PORT = "portMulticast";
+
+    public static final String VALUE_ACCESS_REFUSE = "accessRefuse";
+
 }

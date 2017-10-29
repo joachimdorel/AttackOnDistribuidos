@@ -17,10 +17,11 @@ public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     //The group address must be in the range 224.0.0.0 to 239.255.255.255
+    //TODO rentrer en dynamique par dans la console
     private static final String IP_SERVER = "192.168.1.11";
     private static final int PORT_SERVER = 9000;
-    private List<District> districts;
-    private List<Client> clients;
+    private ArrayList<District> districts;
+    private ArrayList<Client> clients;
     private static Integer generator_ID = 1;
 
     /**
@@ -28,12 +29,18 @@ public class Central {
      */
     public Central(){
         districts= new ArrayList<District>();
+        clients= new ArrayList<Client>();
     }
 
     public static void main(String[] args) {
         System.out.println(SERVER_CENTRAL);
         Scanner scan = new Scanner(System.in);  // Reading from System.in
         Central c1 = new Central();
+
+        Thread connectionClient = new Thread(new AcceptClient(c1.districts, c1.clients));
+        connectionClient.start();
+        System.out.println("Thread d'écoute de messages lunch!");
+
         c1.generateID();
         //Ajout d'un seul district
         //c1.addDistrict();
@@ -68,72 +75,6 @@ public class Central {
         int requestPort = scan.nextInt();
 
         this.districts.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
-    }
-
-    /**
-     * Method to authorize a Client to connect to a Distributed Server
-     * @param scan
-     */
-    private void waitAuthorization(Scanner scan){
-        ServerSocket serverSocket;
-        Socket socket;
-        String clientDistrictName = null, authorizationAccorded = null;
-        District districtReturned = null;
-
-        try {
-            serverSocket = new ServerSocket(PORT_SERVER);
-            socket = serverSocket.accept();
-
-            InputStream inputStream = socket.getInputStream();
-            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-            try {
-                String clientRequest = String.valueOf(objectInputStream.readObject());
-                MessageBroker mbReceive = new MessageBroker(clientRequest);
-                if (mbReceive.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CHOSE_DISTRICT)){
-                    clientDistrictName = mbReceive.getStringValue(Const.REQ_CONTENT);
-                    districtReturned = findDistrict(clientDistrictName);
-                }
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            OutputStream outputStream = socket.getOutputStream();
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), clientDistrictName, scan)){
-                MessageBroker mbSend = new MessageBroker();
-                mbSend.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
-                //TODO to add
-//                mbSend.put("ipMulticast", );
-                objectOutputStream.writeBoolean(true);
-                System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ clientDistrictName);
-                System.out.println(SERVER_CENTRAL+clientDistrictName);
-            }else{
-                objectOutputStream.writeBoolean(false);
-            }
-            objectOutputStream.close();
-
-            serverSocket.close();
-            socket.close();
-        }catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private District findDistrict(String name){
-        for(District d: districts){
-            if(d.getName().equals(name)){
-                return d;
-            }
-        }
-        System.out.println("The district does not exist");
-        return null;
-    }
-
-    private Boolean giveAuthorization(String ipClient, String ClientDistrict, Scanner scan) {
-        System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
-        System.out.println("1. - YES");
-        System.out.println("2. - NO");
-        return scan.next().equals("1");
     }
 
 
@@ -180,5 +121,101 @@ public class Central {
         } catch (final IOException e) {
             e.printStackTrace();
         }
+    }
+}
+
+class AcceptClient extends Thread {
+    private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
+    private List<District> districts;
+    private List<Client> clients;
+    private static final String IP_SERVER = "192.168.1.11";
+    private static final int PORT_SERVER = 9000;
+
+
+    public AcceptClient(ArrayList<District> districts, ArrayList<Client> clients){
+        this.districts = districts;
+        this.clients = clients;
+
+    }
+
+    public void run() {
+        Scanner scan = new Scanner(System.in);  // Reading from System.in
+        try{
+            while(true){
+                 waitAuthorization(scan);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        scan.close();
+    }
+
+    /**
+     * Method to authorize a Client to connect to a Distributed Server
+     * @param scan
+     */
+    private void waitAuthorization(Scanner scan){
+        ServerSocket serverSocket;
+        Socket socket;
+        String clientDistrictName = null, authorizationAccorded = null;
+        District districtReturned = null;
+
+        try {
+            serverSocket = new ServerSocket(PORT_SERVER);
+            socket = serverSocket.accept();
+
+            InputStream inputStream = socket.getInputStream();
+            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+            try {
+                String clientRequest = String.valueOf(objectInputStream.readObject());
+                MessageBroker mbReceive = new MessageBroker(clientRequest);
+                if (mbReceive.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CHOSE_DISTRICT)){
+                    clientDistrictName = mbReceive.getStringValue(Const.REQ_CONTENT);
+                    districtReturned = findDistrict(clientDistrictName);
+                }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            OutputStream outputStream = socket.getOutputStream();
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+            if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), clientDistrictName, scan)){
+                MessageBroker mbSend = new MessageBroker();
+                mbSend.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
+                //TODO to add data of multicast
+//                mbSend.put("ipMulticast", );
+                objectOutputStream.writeBytes(mbSend.toJson());
+                System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ clientDistrictName);
+                System.out.println(SERVER_CENTRAL+clientDistrictName);
+            }else{
+                //TODO to change
+                MessageBroker mbSend2 = new MessageBroker();
+                mbSend2.put(Const.REQ_TYPE, Const.VALUE_ACCESS_REFUSE);
+                objectOutputStream.writeBytes(mbSend2.toJson());
+            }
+            objectOutputStream.close();
+
+            serverSocket.close();
+            socket.close();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private District findDistrict(String name){
+        for(District d: districts){
+            if(d.getName().equals(name)){
+                return d;
+            }
+        }
+        System.out.println("The district does not exist");
+        return null;
+    }
+
+    private Boolean giveAuthorization(String ipClient, String ClientDistrict, Scanner scan) {
+        System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
+        System.out.println("1. - YES");
+        System.out.println("2. - NO");
+        return scan.next().equals("1");
     }
 }

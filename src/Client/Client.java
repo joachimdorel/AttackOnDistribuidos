@@ -33,7 +33,7 @@ public class Client {
         System.out.println(CLIENT);
         Client c=new Client();
 		Scanner scan = new Scanner(System.in);  // Reading from System.in
-        //c.connectionServer(scan);
+        c.connectionServer(scan);
 
 		//c.connectDistrict(scan);
 		//Thread threadMessageMulti = new Thread(new MulticastListener());
@@ -181,7 +181,7 @@ class Recepteur extends Thread {
      */
     private boolean askServerCentral(String districtName) {
         Socket socket;
-        Boolean responseFromServer = null;
+        String responseFromServer = null;
 
         try {
             //TODO update when deployed
@@ -199,19 +199,17 @@ class Recepteur extends Thread {
 
             InputStream inputStream = socket.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-			responseFromServer = objectInputStream.readBoolean();
-            if (responseFromServer){
-				InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-				BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-				String messageReceived = bufferedReader.readLine();
-				MessageBroker mb = new MessageBroker(messageReceived);
-				portDistrict = mb.getIntegerValue("portDistrict");
-				ipDistrict = mb.getStringValue("ipDistrict");
-				IPMulticast = mb.getStringValue("ipMulticast");
-				portMulticast=mb.getIntegerValue("portMulticast");
-				//TODO CHANGER DU COTE DU SERVEUR CENTRAL POUR ENVOYER LES DONNÉES DU MULTICAST!!!
+			responseFromServer = String.valueOf(objectInputStream.readByte());
+			MessageBroker mbReceive = new MessageBroker(responseFromServer);
+            if (!mbReceive.getStringValue(Const.REQ_CHOSE_DISTRICT).equals(Const.VALUE_ACCESS_REFUSE)){
+				portDistrict = mbReceive.getIntegerValue(Const.KEY_DISTRICT_PORT);
+				ipDistrict = mbReceive.getStringValue(Const.KEY_DISTRICT_IP);
+				IPMulticast = mbReceive.getStringValue(Const.KEY_DISTRICT_MULTICAST_IP);
+				portMulticast=mbReceive.getIntegerValue(Const.KEY_DISTRICT_MULTICAST_PORT);
 				//TODO connect to the multicast of the District
-				
+			}
+			else {
+				return false;
 			}
 
             inputStream.close();
@@ -223,7 +221,7 @@ class Recepteur extends Thread {
             e.printStackTrace();
         }
 
-        return(responseFromServer);
+        return(true);
     }
 
 
