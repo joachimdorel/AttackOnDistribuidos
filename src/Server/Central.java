@@ -1,8 +1,10 @@
 package Server;
 
+import Util.Const;
+import Util.MessageBroker;
+
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -13,9 +15,11 @@ import java.util.Scanner;
 public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
-    private static final int PORT_SERVER = 2009;
+    private static final String IP_SERVER = "192.168.1.11";
+    private static final int PORT_SERVER = 9000;
     private List<District> districts;
     private List<Client> clients;
+    private static Integer generator_ID = 1;
 
     public Central(){
         districts= new ArrayList<District>();
@@ -25,11 +29,11 @@ public class Central {
         System.out.println(SERVER_CENTRAL);
         Scanner scan = new Scanner(System.in);  // Reading from System.in
         Central c1 = new Central();
-
+        c1.generateID();
         //Ajout d'un seul district
         //c1.agregarDistrict();
 
-        c1.waitAuthorization(scan);
+        //c1.waitAuthorization(scan);
         scan.close();
     }
 
@@ -135,4 +139,52 @@ public class Central {
             System.out.println(ex);
         }
         */
+
+    /*
+    * Generator of unique ID
+    * Socket which receive id generating request, send an unique ID in response */
+    //TODO : make a specific thread to this function : has to be always listening
+    //TODO : specific port and ip ??
+    private void generateID (){
+        try {
+            //TODO chose a method, make it works
+//            InetAddress IPServer = InetAddress.getByName(IP_SERVER); --> not works
+            InetAddress IPServer = InetAddress.getLocalHost(); //works
+            ;
+
+            final DatagramSocket serverSocket = new DatagramSocket(PORT_SERVER, IPServer);
+            byte[] receiveData;
+            byte[] sendData;
+            System.out.println("Local address : " + serverSocket.getLocalAddress());
+            while (true) {
+                receiveData = new byte[100];
+                final DatagramPacket receivePacket = new DatagramPacket(receiveData,
+                        receiveData.length);
+                System.out.println("Waiting for datagram packet");
+                serverSocket.receive(receivePacket);
+                MessageBroker message = new MessageBroker(new String(receivePacket.getData()));
+                final InetAddress IPAddress = receivePacket.getAddress();
+                final int port = receivePacket.getPort();
+
+                System.out.println("From: " + IPAddress + ":" + port);
+                System.out.println("Message: " + message.toJson());
+
+                if(message.getStringValue(Const.REQ_TYPE).equals(Const.REQ_NEW_ID)){
+                    message.put(Const.REQ_CONTENT, generator_ID++);
+                }
+                sendData = message.toJson().getBytes();
+                final DatagramPacket sendPacket = new DatagramPacket(sendData,
+                        sendData.length, IPAddress, port);
+                serverSocket.send(sendPacket);
+            }
+
+        } catch (final SocketException ex) {
+            //TODO change this sentence
+            ex.printStackTrace();
+            System.exit(1);
+        } catch (final IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 }

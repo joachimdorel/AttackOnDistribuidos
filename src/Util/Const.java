@@ -22,6 +22,8 @@ public class Const {
 
     //----------Request type
 
+    //Request district server -> central server
+    public static final String REQ_NEW_ID = "new_id";
     //Request client -> district server
     public static final String REQ_TITAN_LIST = "titan_list";
     public static final String REQ_KILL_TITAN = "kill_titan";
