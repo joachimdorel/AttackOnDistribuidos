@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/attackOnDistribuidos.iml" filepath="$PROJECT_DIR$/attackOnDistribuidos.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AttackOnDistribuidos.iml" filepath="$PROJECT_DIR$/AttackOnDistribuidos.iml" />
     </modules>
   </component>
 </project>
