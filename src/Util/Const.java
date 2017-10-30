@@ -6,9 +6,6 @@ package Util;
 public class Const {
 
     //----------Titan variables
-//    public enum Type {NORMAL, ECCENTRIC, INCONSTANT}
-//    public enum State {FREE, CAPTURED, DEAD};
-    //TODO add a list of states and types
     public static final String TYPE_TITAN_NORMAL = "NORMAL";
     public static final String TYPE_TITAN_ECCENTRIC = "ECCENTRIC";
     public static final String TYPE_TITAN_INCONSTANT = "INCONSTANT";
@@ -31,4 +28,12 @@ public class Const {
     //Request client -> central server
     public static final String REQ_CHOSE_DISTRICT = "chose_district";
     public static final String REQ_DISTRICT_LIST = "district_list";
+
+    public static final String KEY_DISTRICT_PORT = "portDistrict";
+    public static final String KEY_DISTRICT_IP = "ipDistrict";
+    public static final String KEY_DISTRICT_MULTICAST_IP = "ipMulticast";
+    public static final String KEY_DISTRICT_MULTICAST_PORT = "portMulticast";
+
+    public static final String VALUE_ACCESS_REFUSE = "accessRefuse";
+
 }
