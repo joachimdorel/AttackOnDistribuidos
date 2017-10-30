@@ -33,58 +33,13 @@ public class Client {
         System.out.println(CLIENT);
         Client c=new Client();
 		Scanner scan = new Scanner(System.in);  // Reading from System.in
+
         c.connectionServer(scan);
-
-		//c.connectDistrict(scan);
-		//Thread threadMessageMulti = new Thread(new MulticastListener());
-		//threadMessageMulti.start();
-		//System.out.println("Thread d'écoute d emessages sur le multicast lancé!");
-
+		c.connectDistrict(scan);
 		c.openMenu(scan);
 
         scan.close();
-		
     }
-
-
-
-class Recepteur extends Thread {
-	   InetAddress groupeIP;
-	   int port;
-	   String nom;
-	   MulticastSocket socketReception;
-
-	   Recepteur(InetAddress groupeIP, int port, String nom)  throws Exception { 
-		   this.groupeIP = groupeIP;
-		   this.port = port;
-		   this.nom = nom;
-		   socketReception = new MulticastSocket(port);
-		   socketReception.joinGroup(groupeIP);
-		   start();
-	  }
-
-	  public void run() {
-	    DatagramPacket message;
-	    byte[] contenuMessage;
-	    String texte;
-	    ByteArrayInputStream lecteur;
-	    
-	    while(true) {
-			  contenuMessage = new byte[1024];
-			  message = new DatagramPacket(contenuMessage, contenuMessage.length);
-			  try {
-		            socketReception.receive(message);
-		            texte =(String) (new DataInputStream(new ByteArrayInputStream(contenuMessage))).readUTF();
-					MessageBroker messageListe = new MessageBroker(texte);
-					tabDistrictTitans = messageListe.getListTitansValue(Const.REQ_TITAN_LIST);
-		            System.out.println(texte);
-			  }
-			  catch(Exception exc) {
-		    		System.out.println(exc);
-			  }
-	    }
-	  }
-	}
 
 
     /**
@@ -93,24 +48,7 @@ class Recepteur extends Thread {
      */
     private  void connectionServer(Scanner scan) throws Exception {
 		//TODO TO REMOVE
-		//TEEEEESTT TO REMOVE !!!! Je l'ai laissé pour vous ;)
-
 		/*
-
-		System.out.println("m2  ");
-		MessageBroker m2 = new MessageBroker();
-		m2.put("teeest0", "coucou");
-		String s = m2.toJson(); //utiliser pour envoyer en message
-		System.out.println(s);
-		m2.put("other", "hihi");
-		m2.put("n", 1);
-		s = m2.toJson();
-		MessageBroker m = new MessageBroker(s); //récupérer le message recut et récupe les attributs
-		System.out.println(m.getStringValue("other"));
-		System.out.println(m.getIntegerValue("n"));
-
-
-		System.out.println("------------");
 
 		//test avec titan et list de titan
 		MessageBroker m4 = new MessageBroker();
@@ -128,8 +66,6 @@ class Recepteur extends Thread {
 		System.out.println("NAME  : " + list.get(1).getName());
 		Titans titanTest = m5.getTitansValue("un titan");
 		System.out.println("NAME 2 : " + titanTest.getName());
-
-
 //*/
 
 
@@ -139,13 +75,12 @@ class Recepteur extends Thread {
         ipServer = scan.next();
         System.out.println(CLIENT+"Enter Port Server Central:");
         //TODO Remove when it will matter
-        System.out.println(CLIENT+"Currently on 2009:");
+        System.out.println(CLIENT+"Currently on 9000:");
         while (!scan.hasNextInt()) {
             System.out.println("You have badly written the port, do it again (it has to be an integer)");
             scan.next();
         }
 		portServer = scan.nextInt();
-		connectDistrict(scan);
     }
 
 
@@ -161,14 +96,21 @@ class Recepteur extends Thread {
 		String districtName = scan.next();
 		//TODO check connection
 		if(askServerCentral(districtName)) {
-			InetAddress groupeIP=InetAddress.getByName(IPMulticast);
+			//TODO connect to the multicast of the District
+			InetAddress groupIP=InetAddress.getByName(IPMulticast);
 			int port= portMulticast;
-			new Recepteur(groupeIP,port,districtName);
+			Thread threadMessageMulti = new Thread(new Receptor(groupIP, port, districtName, tabDistrictTitans));
+			threadMessageMulti.start();
+
 			System.out.println("You are now connected to " + districtName + " !");
 		    openMenu(scan);
 		}else{
 		    System.out.println("Authorization refused from the server central.");
 		}
+	}
+
+	private void disconnectionDistrict (){
+
 	}
 
 
@@ -189,28 +131,31 @@ class Recepteur extends Thread {
             //socket = new Socket(ipServer, portServer);
 
 			MessageBroker mbClient = new MessageBroker();
-			mbClient.put("districtName", districtName);
-
+			mbClient.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
+			mbClient.put(Const.REQ_CONTENT, districtName);
 
             OutputStream outputStream = socket.getOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(String.valueOf(mbClient));
+            objectOutputStream.writeObject(mbClient.toJson());
             System.out.println("Message sent to the server");
 
             InputStream inputStream = socket.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-			responseFromServer = String.valueOf(objectInputStream.readByte());
+			responseFromServer = String.valueOf(objectInputStream.readObject());
+
 			MessageBroker mbReceive = new MessageBroker(responseFromServer);
-            if (!mbReceive.getStringValue(Const.REQ_CHOSE_DISTRICT).equals(Const.VALUE_ACCESS_REFUSE)){
-				portDistrict = mbReceive.getIntegerValue(Const.KEY_DISTRICT_PORT);
-				ipDistrict = mbReceive.getStringValue(Const.KEY_DISTRICT_IP);
-				IPMulticast = mbReceive.getStringValue(Const.KEY_DISTRICT_MULTICAST_IP);
-				portMulticast=mbReceive.getIntegerValue(Const.KEY_DISTRICT_MULTICAST_PORT);
-				//TODO connect to the multicast of the District
-			}
-			else {
+			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_REFUSE)){
+				System.out.println(CLIENT+"The access of the district had been refused by the Central");
 				return false;
 			}
+			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_IMPOSSIBLE)){
+				System.out.println(CLIENT+"The access of this district is impossible, the district maybe not exists !");
+				return false;
+			}
+			portDistrict = mbReceive.getIntegerValue(Const.KEY_DISTRICT_REQUEST_PORT);
+			ipDistrict = mbReceive.getStringValue(Const.KEY_DISTRICT_REQUEST_IP);
+			IPMulticast = mbReceive.getStringValue(Const.KEY_DISTRICT_MULTICAST_IP);
+			portMulticast=mbReceive.getIntegerValue(Const.KEY_DISTRICT_MULTICAST_PORT);
 
             inputStream.close();
             objectOutputStream.close();
@@ -219,9 +164,11 @@ class Recepteur extends Thread {
             e.printStackTrace();
         }catch (IOException e) {
             e.printStackTrace();
-        }
+        } catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 
-        return(true);
+		return(true);
     }
 
 
@@ -260,6 +207,7 @@ class Recepteur extends Thread {
 				//TODO : deconnect from the multicastsocket of the current district
 				portDistrict = -1;
 				ipDistrict = null;
+				//TODO : close the current thread and open a new thread!!
 				connectDistrict(scan);
 				openMenu(scan);
 				break;
@@ -360,3 +308,44 @@ class Recepteur extends Thread {
 	}
 
 }
+
+class Receptor extends Thread {
+	InetAddress groupeIP;
+	int port;
+	String nom;
+	MulticastSocket socketReception;
+	ArrayList<Titans> tabDistrictTitans;
+
+	Receptor(InetAddress groupeIP, int port, String nom, ArrayList<Titans> tabDistrictTitans)  throws Exception {
+		this.groupeIP = groupeIP;
+		this.port = port;
+		this.nom = nom;
+		this.tabDistrictTitans = tabDistrictTitans;
+		socketReception = new MulticastSocket(port);
+		socketReception.joinGroup(groupeIP);
+		start();
+	}
+
+	public void run() {
+		DatagramPacket message;
+		byte[] contenuMessage;
+		String texte;
+		ByteArrayInputStream lecteur;
+
+		while(true) {
+			contenuMessage = new byte[1024];
+			message = new DatagramPacket(contenuMessage, contenuMessage.length);
+			try {
+				socketReception.receive(message);
+				texte =(String) (new DataInputStream(new ByteArrayInputStream(contenuMessage))).readUTF();
+				MessageBroker messageListe = new MessageBroker(texte);
+				tabDistrictTitans = messageListe.getListTitansValue(Const.REQ_TITAN_LIST);
+				System.out.println(texte);
+			}
+			catch(Exception exc) {
+				System.out.println(exc);
+			}
+		}
+	}
+}
+

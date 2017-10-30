@@ -2,7 +2,4 @@
 *.iml
 /out/
 *.iws
-**/.idea/workspace.xml
-**/.idea/compiler.xml
-**/.idea/tasks.xml
-**/.idea/libraries
+**/.idea/

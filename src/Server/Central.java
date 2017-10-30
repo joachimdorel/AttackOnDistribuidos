@@ -1,10 +1,10 @@
 package Server;
 
-import Creature.Titans;
 import Util.Const;
 import Util.MessageBroker;
 
 import java.io.*;
+import java.lang.management.ThreadInfo;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +37,17 @@ public class Central {
         Scanner scan = new Scanner(System.in);  // Reading from System.in
         Central c1 = new Central();
 
-        Thread connectionClient = new Thread(new AcceptClient(c1.districts, c1.clients));
+        //Ajout d'un seul district
+        c1.addDistrict(scan);
+
+        Thread connectionClient = new Thread(new AcceptClient(c1.districts, c1.clients, scan));
         connectionClient.start();
         System.out.println("Thread d'écoute de messages lunch!");
 
-        c1.generateID();
-        //Ajout d'un seul district
-        //c1.addDistrict();
+        //TODO : the generateID have to be in a specific thread
+        //c1.generateID();
+
+
 
         //c1.waitAuthorization(scan);
         scan.close();
@@ -130,16 +134,17 @@ class AcceptClient extends Thread {
     private List<Client> clients;
     private static final String IP_SERVER = "192.168.1.11";
     private static final int PORT_SERVER = 9000;
+    Scanner scan;
 
 
-    public AcceptClient(ArrayList<District> districts, ArrayList<Client> clients){
+    public AcceptClient(ArrayList<District> districts, ArrayList<Client> clients, Scanner scan){
         this.districts = districts;
         this.clients = clients;
+        this.scan = scan;
 
     }
 
     public void run() {
-        Scanner scan = new Scanner(System.in);  // Reading from System.in
         try{
             while(true){
                  waitAuthorization(scan);
@@ -147,7 +152,6 @@ class AcceptClient extends Thread {
         }catch(Exception e){
             e.printStackTrace();
         }
-        scan.close();
     }
 
     /**
@@ -159,15 +163,18 @@ class AcceptClient extends Thread {
         Socket socket;
         String clientDistrictName = null, authorizationAccorded = null;
         District districtReturned = null;
+        System.out.println("Into waitAuthorization Function");
+
 
         try {
             serverSocket = new ServerSocket(PORT_SERVER);
             socket = serverSocket.accept();
-
             InputStream inputStream = socket.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+
             try {
                 String clientRequest = String.valueOf(objectInputStream.readObject());
+                System.out.println("TEST clientRequest : " + clientRequest);
                 MessageBroker mbReceive = new MessageBroker(clientRequest);
                 if (mbReceive.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CHOSE_DISTRICT)){
                     clientDistrictName = mbReceive.getStringValue(Const.REQ_CONTENT);
@@ -179,20 +186,24 @@ class AcceptClient extends Thread {
 
             OutputStream outputStream = socket.getOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), clientDistrictName, scan)){
-                MessageBroker mbSend = new MessageBroker();
-                mbSend.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
-                //TODO to add data of multicast
-//                mbSend.put("ipMulticast", );
-                objectOutputStream.writeBytes(mbSend.toJson());
-                System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ clientDistrictName);
-                System.out.println(SERVER_CENTRAL+clientDistrictName);
-            }else{
-                //TODO to change
-                MessageBroker mbSend2 = new MessageBroker();
-                mbSend2.put(Const.REQ_TYPE, Const.VALUE_ACCESS_REFUSE);
-                objectOutputStream.writeBytes(mbSend2.toJson());
+            MessageBroker mbSend = new MessageBroker();
+            mbSend.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
+            if(districtReturned!=null){
+                if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), clientDistrictName, scan)){
+                    mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_ACCEPTED);
+                    mbSend.put(Const.KEY_DISTRICT_REQUEST_IP, districtReturned.getRequestIP());
+                    mbSend.put(Const.KEY_DISTRICT_REQUEST_PORT, districtReturned.getRequestPort());
+                    mbSend.put(Const.KEY_DISTRICT_MULTICAST_IP, districtReturned.getMulticastIP());
+                    mbSend.put(Const.KEY_DISTRICT_MULTICAST_PORT, districtReturned.getMulticastPort());
+                }else{
+                    mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_REFUSE);
+                }
+            } else {
+                mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_IMPOSSIBLE);
             }
+            objectOutputStream.writeObject(mbSend.toJson());
+            System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ clientDistrictName);
+            System.out.println(SERVER_CENTRAL+clientDistrictName);
             objectOutputStream.close();
 
             serverSocket.close();
@@ -213,9 +224,12 @@ class AcceptClient extends Thread {
     }
 
     private Boolean giveAuthorization(String ipClient, String ClientDistrict, Scanner scan) {
+        Thread.interrupted();
         System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
         System.out.println("1. - YES");
         System.out.println("2. - NO");
-        return scan.next().equals("1");
+        //TODO to change --> faire fonctionner le scanner
+        //return scan.next().equals("1");
+        return true;
     }
 }
