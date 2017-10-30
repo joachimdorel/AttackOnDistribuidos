@@ -14,13 +14,19 @@ import java.util.Scanner;
 public class Client {
 
     private static final String CLIENT = "[CLIENT] ";
+
     private  String ipServer;
     private  int portServer;
+	private  Socket socketCentral;
+
     private  String ipDistrict;
     private  int portDistrict;
-	private  Socket socketMulti;
+	private  Socket socketDistrict;
+
 	private  int portMulticast;
 	private  String IPMulticast;
+	private  Socket socketMulti;
+
     private  ArrayList<Titans> tabDistrictTitans = new ArrayList<Titans>();
     private  ArrayList<Titans> tabCapturedTitans = new ArrayList<Titans>();
     private  ArrayList<Titans> tabKilledTitans = new ArrayList<Titans>();
@@ -39,11 +45,14 @@ public class Client {
 		c.openMenu(scan);
 
         scan.close();
+		c.socketCentral.close();
+		c.socketMulti.close();
+		c.socketDistrict.close();
     }
 
 
     /**
-     * Fonction connecting the Client to the Server
+     * Fonction asking to the Client the informations to the Server
      * @param scan
      */
     private  void connectionServer(Scanner scan) throws Exception {
@@ -70,8 +79,6 @@ public class Client {
 
 
         System.out.println(CLIENT+"Enter IP Server Central:");
-        //TODO Remove when it will matter
-        System.out.println(CLIENT+"Currently does not matter");
         ipServer = scan.next();
         System.out.println(CLIENT+"Enter Port Server Central:");
         //TODO Remove when it will matter
@@ -81,12 +88,20 @@ public class Client {
             scan.next();
         }
 		portServer = scan.nextInt();
+		try{
+			socketCentral=new Socket(ipServer,portServer);
+			System.out.println("Socket between the client and the central server has been established. They can now comunicate.");
+		}catch(UnknownHostException e){
+			e.printStackTrace();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
     }
 
 
     /**
      * Function asks the client which district he wants to connect to,
-     * and try to connect the client to the district he will enter the name
+     * and try to connect the client to the district he will enter the name of
      * @param scan
      */
 	private  void connectDistrict(Scanner scan) throws Exception {
@@ -122,26 +137,26 @@ public class Client {
      * @return
      */
     private boolean askServerCentral(String districtName) {
-        Socket socket;
+
         String responseFromServer = null;
 
         try {
             //TODO update when deployed
-            socket = new Socket(InetAddress.getLocalHost(), portServer);
-            //socket = new Socket(ipServer, portServer);
+            //socketCentral = new Socket(InetAddress.getLocalHost(), portServer); // Attention ne marche que parce que les deux programmes sont sur la même machine!
 
 			MessageBroker mbClient = new MessageBroker();
 			mbClient.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
 			mbClient.put(Const.REQ_CONTENT, districtName);
 
-            OutputStream outputStream = socket.getOutputStream();
+            OutputStream outputStream = socketCentral.getOutputStream();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
             objectOutputStream.writeObject(mbClient.toJson());
             System.out.println("Message sent to the server");
 
-            InputStream inputStream = socket.getInputStream();
+            InputStream inputStream = socketCentral.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 			responseFromServer = String.valueOf(objectInputStream.readObject());
+			System.out.println("Réponse du serveur : "+ responseFromServer);
 
 			MessageBroker mbReceive = new MessageBroker(responseFromServer);
 			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_REFUSE)){
@@ -159,7 +174,7 @@ public class Client {
 
             inputStream.close();
             objectOutputStream.close();
-            socket.close();
+            //socket.close();
         }catch (UnknownHostException e) {
             e.printStackTrace();
         }catch (IOException e) {

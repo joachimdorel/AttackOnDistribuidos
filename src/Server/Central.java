@@ -38,11 +38,19 @@ public class Central {
 
         Thread connectionClient = new Thread(new AcceptClient(c1.districts, c1.clients, scan));
         connectionClient.start();
+
         System.out.println("Thread connectionClient lunch!");
+
+        System.out.println("Thread connectionClient launched!");
+
+
+        //Ajout d'un seul district
+        c1.addDistrict(scan);
+
 
         Thread generatorID = new Thread(new GeneratorID());
         generatorID.start();
-        System.out.println("Thread generatorID lunch!");
+        System.out.println("Thread generatorID launched!");
 
         c1.openMenu(scan);
 
@@ -234,13 +242,16 @@ class AcceptClient extends Thread {
     private Boolean giveAuthorization(String ipClient, String ClientDistrict, Scanner scan) {
         Thread.interrupted();
         System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
-        System.out.println("1. - YES");
-        System.out.println("2. - NO");
+        System.out.println("1. - YES (press 'Y')");
+        System.out.println("2. - NO (press 'N')");
         //TODO to change --> faire fonctionner le scanner
         //Apparemment pour le faire fonctionner il faut interompre le thread main, parce que sinon il sait pas pour quel thread il scan
         //mais je sais pas comment faire ...
-        //return scan.next().equals("1");
-        return true;
+		if (scan.next().equals("Y")){
+        	return true;
+		}else{
+        	return false;
+		}
     }
 
     private void updateClientList(String clientName, String districtConnectedTo){
