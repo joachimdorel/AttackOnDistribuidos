@@ -1,8 +1,5 @@
 package Server;
 
-import Creature.Titans;
-import Util.*;
-
 public class District {
     private String name;
     private String multicastIP;
@@ -10,10 +7,10 @@ public class District {
     private String requestIP;
     private int requestPort;
 
-    public District(String name, String ipMulticast, int puertoMulticast, String requestIP, int requestPort) {
+    public District(String name, String multicastIP, int multicastPort, String requestIP, int requestPort) {
         this.name = name;
-        this.multicastIP = ipMulticast;
-        this.multicastPort = puertoMulticast;
+        this.multicastIP = multicastIP;
+        this.multicastPort = multicastPort;
         this.requestIP = requestIP;
         this.requestPort = requestPort;
     }
@@ -40,10 +37,10 @@ public class District {
 
     @Override
     public String toString() {
-        return "Nombre:'" + name + ',' +
-                ", IP Multicast:'" + multicastIP + ',' +
-                ", Puerto Multicast:'" + multicastPort + ',' +
-                ", IP Peticiones:'" + requestIP + ',' +
-                ", Puerto Peticiones:'" + requestPort;
+        return "Name:'" + name + ',' +
+                ", Multicast IP:'" + multicastIP + ',' +
+                ", Multicast Port:'" + multicastPort + ',' +
+                ", Request IP:'" + requestIP + ',' +
+                ", Request Port:'" + requestPort;
     }
 }
