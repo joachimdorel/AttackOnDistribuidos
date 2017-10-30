@@ -96,6 +96,7 @@ public class Client {
 		String districtName = scan.next();
 		//TODO check connection
 		if(askServerCentral(districtName)) {
+			//TODO connect to the multicast of the District
 			InetAddress groupIP=InetAddress.getByName(IPMulticast);
 			int port= portMulticast;
 			Thread threadMessageMulti = new Thread(new Receptor(groupIP, port, districtName, tabDistrictTitans));
@@ -141,7 +142,7 @@ public class Client {
             InputStream inputStream = socket.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 			responseFromServer = String.valueOf(objectInputStream.readObject());
-			System.out.println("TEST : " + responseFromServer);
+
 			MessageBroker mbReceive = new MessageBroker(responseFromServer);
 			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_REFUSE)){
 				System.out.println(CLIENT+"The access of the district had been refused by the Central");
@@ -155,8 +156,6 @@ public class Client {
 			ipDistrict = mbReceive.getStringValue(Const.KEY_DISTRICT_REQUEST_IP);
 			IPMulticast = mbReceive.getStringValue(Const.KEY_DISTRICT_MULTICAST_IP);
 			portMulticast=mbReceive.getIntegerValue(Const.KEY_DISTRICT_MULTICAST_PORT);
-			//TODO connect to the multicast of the District
-
 
             inputStream.close();
             objectOutputStream.close();

@@ -201,7 +201,7 @@ class AcceptClient extends Thread {
             } else {
                 mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_IMPOSSIBLE);
             }
-            objectOutputStream.writeBytes(mbSend.toJson());
+            objectOutputStream.writeObject(mbSend.toJson());
             System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ clientDistrictName);
             System.out.println(SERVER_CENTRAL+clientDistrictName);
             objectOutputStream.close();
