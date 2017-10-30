@@ -37,10 +37,10 @@ public class District {
 
     @Override
     public String toString() {
-        return "Name:'" + name + ',' +
-                ", Multicast IP:'" + multicastIP + ',' +
-                ", Multicast Port:'" + multicastPort + ',' +
-                ", Request IP:'" + requestIP + ',' +
+        return "Name:'" + name +
+                ", Multicast IP:'" + multicastIP +
+                ", Multicast Port:'" + multicastPort +
+                ", Request IP:'" + requestIP +
                 ", Request Port:'" + requestPort;
     }
 }

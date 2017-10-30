@@ -8,14 +8,6 @@ import java.net.*;
 import java.lang.*;
 
 
-/**
- * A distributed file system is a client/server-based application that allows clients
- * to access and process data stored on the server as if it were on their own computer.
- * When a user accesses a file on the server, the server sends the user a copy of the file,
- * which is cached on the user's computer while the data is being processed and is then returned to the server.
- */
-
-
 //TODO figure out how to launch threads when creating a new district
     //TODO creation of a new distributed district server
 //TODO events : notify to all when titan captured/killed (thread always activ listens to the messages sent by clients, other one treats demands)
@@ -28,7 +20,7 @@ public class Distributed {
     private String multicastIP; //it is the group address
     private int multicastPort;
 	private InetAddress groupAddress; //InetAddress du multicast
-	MulticastSocket socketMulticast;
+	private MulticastSocket socketMulticast;
     private String requestIP;
     private int requestPort;
     private String centralServerIP;
@@ -48,10 +40,11 @@ public class Distributed {
         Distributed d = new Distributed(name);
 
         //TODO gestion des threads
+
         System.out.println("Name main thread : " + Thread.currentThread().getName());
         d.initialize(scan);
-        d.TitanPublication(scan);
         //d.connectionToMulticast();
+        d.openMenu(scan);
         scan.close();
     }
 
@@ -112,8 +105,41 @@ public class Distributed {
         }
     }
 
+    /**
+     * Function displaying the menu and switching between the modes
+     * @param scan scanner can't be reopen
+     */
+    private void openMenu(Scanner scan) throws IOException {
 
-    private void TitanPublication(Scanner scan) throws IOException {
+        int choice;
+        System.out.println("    -    ");
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "Console");
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "(1) List of the Titans");
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "(2) Add a Titan");
+        System.out.println("    -    ");
+        choice = Integer.parseInt(scan.next());
+        switch (choice) {
+            case 1:
+                //list titans
+                System.out.println("-------------------------------");
+                for (Titans t : titansList)
+                    System.out.println(t.getName() + ", ID : " + t.getID() + ", type: " + t.getType());
+                openMenu(scan);
+                break;
+            case 2:
+                //add a titan
+                titanPublication(scan);
+                openMenu(scan);
+            default:
+                //default
+                System.out.println("Please enter a correct number (between 1 and 2)");
+                openMenu(scan);
+                break;
+        }
+    }
+
+
+    private void titanPublication(Scanner scan) throws IOException {
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Publish titan");
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Enter a name : ");
         String titanName = scan.next();
@@ -129,16 +155,21 @@ public class Distributed {
             case(3):type=Const.TYPE_TITAN_INCONSTANT; break;
         }
         int id = requestID();
-        Titans newTitan = new Titans(titanName, type, id, name);
-        titansList.add(newTitan);
-        System.out.println("[" + DISTRIBUTED + name + " ] " + "A titan has been published : ");
-        System.out.println("************");
-        System.out.println("ID: " + newTitan.getID());
-        System.out.println("Name: " + newTitan.getName());
-        System.out.println("Type: " + newTitan.getType());
-        System.out.println("************");
+        if(id == -1){
+            System.out.println("[" + DISTRIBUTED + name + " ] " + "There were a problem : impossible to get an id for the new titan");
+        } else {
+            Titans newTitan = new Titans(titanName, type, id, name);
+            titansList.add(newTitan);
+            System.out.println("[" + DISTRIBUTED + name + " ] " + "A titan has been published : ");
+            System.out.println("************");
+            System.out.println("ID: " + newTitan.getID());
+            System.out.println("Name: " + newTitan.getName());
+            System.out.println("Type: " + newTitan.getType());
+            System.out.println("************");
 
-		sendTitansListMulticast();
+            //TODO remove the comment
+            //sendTitansListMulticast();
+        }
     }
 
 
@@ -152,6 +183,7 @@ public class Distributed {
             final DatagramSocket socket = new DatagramSocket();
             final byte[] receiveData = new byte[100];
             final DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
             byte[] sendRequest;
             sendRequest = request.getBytes();
             System.out.println("---- ready to send data");
