@@ -208,7 +208,8 @@ public class Distributed {
             MessageBroker listToSend = new MessageBroker();
 
             String stringToSend;
-            listToSend.put(Const.REQ_TITAN_LIST, (Serializable) titansList);
+            listToSend.put(Const.REQ_TYPE, Const.REQ_TITAN_LIST);
+            listToSend.put(Const.REQ_CONTENT, (Serializable) titansList);
             stringToSend=listToSend.toJson();
             ByteArrayOutputStream sortie = 	new ByteArrayOutputStream();
 

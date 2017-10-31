@@ -435,8 +435,10 @@ class Receptor extends Thread {
 				socketReception.receive(message);
 				text =new DataInputStream(new ByteArrayInputStream(contendMessage)).readUTF();
 				MessageBroker messageList = new MessageBroker(text);
-				tabDistrictTitans = messageList.getListTitansValue(Const.REQ_TITAN_LIST);
-				client.tabDistrictTitans = tabDistrictTitans;
+				if (messageList.getStringValue(Const.REQ_TYPE).equals(Const.REQ_TITAN_LIST)) {
+					tabDistrictTitans = messageList.getListTitansValue(Const.REQ_CONTENT);
+					client.tabDistrictTitans = tabDistrictTitans;
+				}
 			}
 			catch(Exception exc) {
 				exc.printStackTrace();

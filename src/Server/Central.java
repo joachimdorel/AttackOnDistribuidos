@@ -9,9 +9,6 @@ import java.util.*;
 
 import static Server.Central.scanGlobal;
 
-//TODO when registrate a district : verify that it exists and add it in the list
-//TODO update the clients list when a client change his district or when other client appears
-
 public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
@@ -317,7 +314,6 @@ class AcceptClient extends Thread {
 class GeneratorID extends Thread {
     private static Integer generator_ID = 1;
     private final int PORT_SERVER = 9000;
-    //private final String IP_SERVER = "192.168.1.30"; //TODO to remove
 
     public void run() {
         try{
@@ -348,7 +344,6 @@ class GeneratorID extends Thread {
                 receiveData = new byte[100];
                 final DatagramPacket receivePacket = new DatagramPacket(receiveData,
                         receiveData.length);
-                System.out.println("Waiting for datagram packet");
                 serverSocket.receive(receivePacket);
                 MessageBroker message = new MessageBroker(new String(receivePacket.getData()));
                 final InetAddress IPAddress = receivePacket.getAddress();
