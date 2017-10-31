@@ -147,6 +147,7 @@ public class Client {
 			ipDistrict = mbReceive.getStringValue(Const.KEY_DISTRICT_REQUEST_IP);
 			IPMulticast = mbReceive.getStringValue(Const.KEY_DISTRICT_MULTICAST_IP);
 			portMulticast=mbReceive.getIntegerValue(Const.KEY_DISTRICT_MULTICAST_PORT);
+			System.out.println("----- DEBUG : "+portDistrict + " | " + ipDistrict + " | " + IPMulticast + " | " + portMulticast);
 
             inputStream.close();
             objectOutputStream.close();
