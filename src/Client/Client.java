@@ -27,14 +27,12 @@ public class Client {
 	private  int portMulticast;
 	private  String IPMulticast;
 	private  Socket socketMulti;
-
-    private  ArrayList<Titans> tabDistrictTitans = new ArrayList<Titans>();
+	//this variable has to be public to be accessed and changed by the other thread
+    public  ArrayList<Titans> tabDistrictTitans = new ArrayList<Titans>();
     private  ArrayList<Titans> tabCapturedTitans = new ArrayList<Titans>();
     private  ArrayList<Titans> tabKilledTitans = new ArrayList<Titans>();
 
-	//TODO create the 2 threads (thread principal = send thread ; listening thread will be overwrited when changing of district)
-	//TODO lists of District Titans : synchronization methods
-	//TODO menu : switch between options : write each method
+	//TODO listening thread will be overwrited when changing of district)
 
     public static void main(String[] args) throws Exception {
         System.out.println(CLIENT);
@@ -42,8 +40,8 @@ public class Client {
 		Scanner scan = new Scanner(System.in);  // Reading from System.in
 
         c.connectionServer(scan);
-		c.connectDistrict(scan);
-		c.openMenu(scan);
+		c.connectDistrict(scan, c);
+		c.openMenu(scan, c);
 
         scan.close();
 		c.socketCentral.close();
@@ -81,19 +79,17 @@ public class Client {
      * and try to connect the client to the district he will enter the name of
      * @param scan
      */
-	private  void connectDistrict(Scanner scan) throws Exception {
+	private  void connectDistrict(Scanner scan, Client c) throws Exception {
 		System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
 		String districtName = scan.next();
-		//TODO check connection
 		if(askServerCentral(districtName)) {
-			//TODO connect to the multicast of the District
 			InetAddress groupIP=InetAddress.getByName(IPMulticast);
 			int port= portMulticast;
-			Thread threadMessageMulti = new Thread(new Receptor(groupIP, port, districtName, tabDistrictTitans));
+			Thread threadMessageMulti = new Thread(new Receptor(groupIP, port, districtName, tabDistrictTitans, c));
 			threadMessageMulti.start();
 			System.out.println("You are now connected to " + districtName + " !");
 			firstConnectionToDistrict();
-		    openMenu(scan);
+		    openMenu(scan, c);
 		}else{
 		    System.out.println("Authorization refused from the server central.");
 		}
@@ -103,7 +99,6 @@ public class Client {
 	private void disconnectionDistrict (){
 
 	}
-
 
 	//TODO what is our way to identify a district ?
     /**
@@ -165,11 +160,10 @@ public class Client {
     private void firstConnectionToDistrict(){
 		MessageBroker mbRequest = new MessageBroker();
 		mbRequest.put(Const.REQ_TYPE, Const.REQ_TITAN_LIST);
-		System.out.println("FIRST TEST : "+ tabDistrictTitans);
 		if (!requestToDistrict(mbRequest.toJson())){
 			System.out.println(CLIENT+"There were a problem, we couldn't synchronize your data with the district data");
 		} else {
-			System.out.println("TTEEEESST : "+ tabDistrictTitans);
+			System.out.println(CLIENT+"You manage to have a first connection with district and retrieve the list of titans");
 		}
 	}
 
@@ -179,7 +173,7 @@ public class Client {
      * Function displaying the menu and switching between the modes
      * @param scan
      */
-    private void openMenu(Scanner scan) throws Exception {
+    private void openMenu(Scanner scan, Client c) throws Exception {
 
 		int choice;
 		System.out.println("    -    ");
@@ -197,11 +191,10 @@ public class Client {
 		switch(choice){
 			case 1:
 				//list titans
-				//TODO create the table of titans (and actualize it)!
 				System.out.println("");
 				System.out.println("List of the District's Titans :");
 				showListTitansFromCurrentDistrict(tabDistrictTitans);
-				openMenu(scan);
+				openMenu(scan, c);
 				break;
 
 			case 2:
@@ -210,8 +203,8 @@ public class Client {
 				portDistrict = -1;
 				ipDistrict = null;
 				//TODO : close the current thread and open a new thread!!
-				connectDistrict(scan);
-				openMenu(scan);
+				connectDistrict(scan, c);
+				openMenu(scan, c);
 				break;
 
 			case 3:
@@ -226,7 +219,7 @@ public class Client {
 				}else{
 					System.out.println("You failed to capture the titan " + wishToCapture + "...");
 				}
-				openMenu(scan);
+				openMenu(scan, c);
 				break;
 
 			case 4:
@@ -241,31 +234,29 @@ public class Client {
 				}else{
 					System.out.println("You failed to kill the titan " + wishToKill + "...");
 				}
-				openMenu(scan);
+				openMenu(scan, c);
 				break;
 
 			case 5:
 				//list captured titans
-				//TODO create the table of captured titans (and actualize it)!
 				System.out.println("");
 				System.out.println("List of the captured Titans :");
 				showListTitansFromAllDistrict(tabCapturedTitans);
-				openMenu(scan);
+				openMenu(scan, c);
 				break;
 
 			case 6:
 				//list killed titans
-				//TODO create the table of killed titans (and actualize it)!
 				System.out.println("");
 				System.out.println("List of the killed Titans :");
 				showListTitansFromAllDistrict(tabKilledTitans);
-				openMenu(scan);
+				openMenu(scan, c);
 		
 				break;
 			default:
 				//default
 				System.out.println("Please enter a correct number (between 1 and 6)");
-				openMenu(scan);
+				openMenu(scan, c);
 				break;
 		}
 
@@ -304,8 +295,6 @@ public class Client {
      * @return true is the titan is captured, false otherwise
      */
     private boolean captureTitan(int idTitan){
-		//TODO send message to the district to ask to capture the titan, and get the response back. return true if success, false if fail.
-		//CAUTION: the titan has to be normal or inconstant
 		Titans titanCaptured = null;
 		Boolean find = false;
 		Iterator<Titans> titanIterator = tabDistrictTitans.iterator();
@@ -339,7 +328,6 @@ public class Client {
      * @return true is the titan is killed, false otherwise
      */
 	private boolean killTitan(int idTitan){
-		//TODO write the code of the function, that send message to the district to ask to kill the titan, and get the response back. return true if success, false if fail.
 		//CAUTION: the titan has to be normal or eccentric
 		Titans titanKilled = null;
 		Boolean find = false;
@@ -368,7 +356,6 @@ public class Client {
 
 
 	private Boolean requestToDistrict(String message){
-		//TODO: make the UDP
 		Boolean requestAccepted = false;
 		try{
 			final DatagramSocket socket = new DatagramSocket();
@@ -421,35 +408,35 @@ public class Client {
 class Receptor extends Thread {
 	private InetAddress groupIP;
 	private int port;
-	private String nom;
+	private String districtName;
 	private MulticastSocket socketReception;
 	private ArrayList<Titans> tabDistrictTitans;
+	private Client client;
 
-	Receptor(InetAddress groupIP, int port, String nom, ArrayList<Titans> tabDistrictTitans)  throws Exception {
+	Receptor(InetAddress groupIP, int port, String districtName, ArrayList<Titans> tabDistrictTitans, Client client)  throws Exception {
 		this.groupIP = groupIP;
 		this.port = port;
-		this.nom = nom;
+		this.districtName = districtName;
 		this.tabDistrictTitans = tabDistrictTitans;
+		this.client = client;
 		socketReception = new MulticastSocket(port);
 		socketReception.joinGroup(groupIP);
-		start();
 	}
 
 	public void run() {
 		DatagramPacket message;
-		byte[] contenuMessage;
-		String texte;
-		ByteArrayInputStream lecteur;
+		byte[] contendMessage;
+		String text;
 
 		while(true) {
-			contenuMessage = new byte[1024];
-			message = new DatagramPacket(contenuMessage, contenuMessage.length);
+			contendMessage = new byte[2048];
+			message = new DatagramPacket(contendMessage, contendMessage.length);
 			try {
 				socketReception.receive(message);
-				texte =(String) (new DataInputStream(new ByteArrayInputStream(contenuMessage))).readUTF();
-				MessageBroker messageListe = new MessageBroker(texte);
-				tabDistrictTitans = messageListe.getListTitansValue(Const.REQ_TITAN_LIST);
-				System.out.println(texte);
+				text =new DataInputStream(new ByteArrayInputStream(contendMessage)).readUTF();
+				MessageBroker messageList = new MessageBroker(text);
+				tabDistrictTitans = messageList.getListTitansValue(Const.REQ_TITAN_LIST);
+				client.tabDistrictTitans = tabDistrictTitans;
 			}
 			catch(Exception exc) {
 				exc.printStackTrace();

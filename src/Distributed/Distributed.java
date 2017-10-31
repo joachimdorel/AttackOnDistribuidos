@@ -8,10 +8,7 @@ import java.net.*;
 import java.lang.*;
 
 
-//TODO figure out how to launch threads when creating a new district
-    //TODO creation of a new distributed district server
-//TODO events : notify to all when titan captured/killed (thread always activ listens to the messages sent by clients, other one treats demands)
-//TODO: check all id are different
+//TODO creation of a new distributed district server
 
 public class Distributed {
     private static final String DISTRIBUTED = " DISTRICT ";
@@ -40,16 +37,11 @@ public class Distributed {
         Distributed d = new Distributed(name);
         d.initialize(scan);
 
-        System.out.println("TEST" + d.titansList);
-        ClientRequests clientRequests = new ClientRequests(d.requestIP, d.requestPort, d.titansList);
+        ClientRequests clientRequests = new ClientRequests(d.requestIP, d.requestPort, d.titansList, d);
         clientRequests.start();
-        System.out.println("Thread clientRequests launched!");
-
 
         d.connectionToMulticast();
         d.openMenu(scan);
-        //TODO gestion des threads
-
 
         scan.close();
 		d.socketMulticast.close();
@@ -58,6 +50,7 @@ public class Distributed {
     private void initialize(Scanner scan){
         //The multicast ip must be in the range 224.0.0.0 to 239.255.255.255
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast IP : ");
+        System.out.println("CAUTION : The multicast ip must be in the range 224.0.0.0 to 239.255.255.255");
         multicastIP = scan.next();
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast port : ");
         while (!scan.hasNextInt()) {
@@ -85,16 +78,11 @@ public class Distributed {
     }
 
 
-    //TODO : send a mensage to the multicast each time there is a modification
-
-
-
 	// function that connect the district to his multicast address
     private void connectionToMulticast(){
         try {
             socketMulticast = new MulticastSocket();
             groupAddress = InetAddress.getByName(multicastIP);
-			System.out.println("Connection établie entre serveur et multicast");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -175,7 +163,7 @@ public class Distributed {
         String request = mb.toJson();
         try{
             final DatagramSocket socket = new DatagramSocket();
-            final byte[] receiveData = new byte[100];
+            final byte[] receiveData = new byte[1024];
             final DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
             byte[] sendRequest;
@@ -213,7 +201,7 @@ public class Distributed {
 
 
 	//Function that sends the current Titans' list throught the multicast
-	private void sendTitansListMulticast() throws IOException {
+	public void sendTitansListMulticast() throws IOException {
         byte[] contenuMessage;
         DatagramPacket message;
         try{
@@ -244,11 +232,13 @@ class ClientRequests extends Thread {
     private String requestIP;
     private int requestPort;
     private final ArrayList<Titans> titansList;
+    private final Distributed distributed;
 
-    public ClientRequests (String requestIP, int requestPort, ArrayList<Titans> titansList){
+    public ClientRequests (String requestIP, int requestPort, ArrayList<Titans> titansList, Distributed d){
         this.requestIP = requestIP;
         this.requestPort = requestPort;
         this.titansList = titansList;
+        this.distributed = d;
     }
 
     public void run() {
@@ -276,7 +266,6 @@ class ClientRequests extends Thread {
                 receiveData = new byte[100];
                 final DatagramPacket receivePacket = new DatagramPacket(receiveData,
                         receiveData.length);
-                System.out.println("Waiting for datagram packet");
                 serverSocket.receive(receivePacket);
                 MessageBroker messageReceived = new MessageBroker(new String(receivePacket.getData()));
                 final InetAddress IPAddress = receivePacket.getAddress();
@@ -290,23 +279,21 @@ class ClientRequests extends Thread {
                 if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CAPTURE_TITAN)){
                     //TODO : put the request in a fifo
 
-                    //TODO : if request accepted --> sendTitansListMulticast();
                     synchronized (titansList){
                         Titans titan = titanIsThere(messageReceived.getIntegerValue(Const.REQ_CONTENT));
                         if(titan != null){
-                            System.out.println("The titan was find");
                             //to be captured the titan has to be normal or inconstant
                             if(titan.getType().equals(Const.TYPE_TITAN_ECCENTRIC)){
                                 messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
                             } else {
-                                System.out.println("we remove the titan");
                                 titansList.remove(titan);
+                                //we call the multicast method of the main thread
+                                distributed.sendTitansListMulticast();
                                 messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_ACCEPTED);
                             }
                         } else {
                             messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
                         }
-                        System.out.println("TEST : "+ titansList);
                     }
                 } else if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_KILL_TITAN)){
                     synchronized (titansList){
@@ -322,12 +309,10 @@ class ClientRequests extends Thread {
                         } else {
                             messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
                         }
-                        System.out.println("TEST : "+ titansList);
                     }
                 } else if (messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_TITAN_LIST)){
                     messageToSent.put(Const.REQ_CONTENT, (Serializable) titansList);
                 }
-                //TODO : the else if for the first connection
                 sendData = messageToSent.toJson().getBytes();
                 final DatagramPacket sendPacket = new DatagramPacket(sendData,
                         sendData.length, IPAddress, port);
