@@ -38,10 +38,6 @@ public class Central {
 
         System.out.println("Thread connectionClient launched!");
 
-        //TODO to remove
-        //Ajout d'un seul district
-        c1.addDistrict(scan);
-
         Thread generatorID = new Thread(new GeneratorID());
         generatorID.start();
         System.out.println("Thread generatorID launched!");
