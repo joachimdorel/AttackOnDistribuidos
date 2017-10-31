@@ -243,15 +243,6 @@ class AcceptClient extends Thread {
     private Boolean giveAuthorization(String ipClient, String ClientDistrict) {
         Thread.interrupted();
         System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
-
-        //Displaying the menu
-        System.out.println("    -    ");
-        System.out.println(SERVER_CENTRAL + "Console");
-        System.out.println(SERVER_CENTRAL + "(1) List of the Districts");
-        System.out.println(SERVER_CENTRAL + "(2) List of the Clients");
-        System.out.println(SERVER_CENTRAL + "(3) Add a district");
-        System.out.println("    -    ");
-
         return scanGlobal("giveAuthorization", null).equals("1");
     }
 

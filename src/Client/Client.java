@@ -132,7 +132,7 @@ public class Client {
             InputStream inputStream = socketCentral.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
 			responseFromServer = String.valueOf(objectInputStream.readObject());
-			System.out.println("Réponse du serveur : "+ responseFromServer);
+			System.out.println("Response from serveur : "+ responseFromServer);
 
 			MessageBroker mbReceive = new MessageBroker(responseFromServer);
 			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_REFUSED)){
