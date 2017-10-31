@@ -13,8 +13,7 @@ public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     //TODO rentrer en dynamique par dans la console ??
-    private static final String IP_SERVER = "192.168.1.11";
-    private static final int PORT_SERVER = 9000;
+    private static final int PORT_SERVER = 5000;
     private ArrayList<District> districts;
     private ArrayList<Client> clients;
 
@@ -190,8 +189,7 @@ class AcceptClient extends Thread {
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     private List<District> districts;
     private final List<Client> clients;
-    private static final String IP_SERVER = "192.168.1.11";
-    private static final int PORT_SERVER = 9000;
+    private static final int PORT_SERVER = 5000;
 
     public AcceptClient(ArrayList<District> districts, ArrayList<Client> clients){
         this.districts = districts;
@@ -334,8 +332,7 @@ class GeneratorID extends Thread {
     private void generateID (){
         try {
             //TODO change in the virtual machine
-//            InetAddress IPServer = InetAddress.getByName(IP_SERVER); // --> not works
-            InetAddress IPServer = InetAddress.getLocalHost(); //works by in a thread create a new IP
+            InetAddress IPServer = InetAddress.getLocalHost();
 
             final DatagramSocket serverSocket = new DatagramSocket(PORT_SERVER, IPServer);
             byte[] receiveData;

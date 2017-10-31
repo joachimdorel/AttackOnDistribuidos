@@ -14,7 +14,7 @@ import java.util.*;
  */
 
 //TODO : rajouter pour le traitement des listes et des objets (liste de titan)
-
+@SuppressWarnings("unchecked")
 public class MessageBroker {
     /**
      * A encapsulated map representing some message

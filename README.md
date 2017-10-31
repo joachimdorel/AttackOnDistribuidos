@@ -7,19 +7,19 @@ Project as part of the course of Distribuited Systems at the "Universidad Tecnic
 Case of the server : <br />
 Go to the virtual machine grupo-18@10.10.2.183
 
-    javac -d *.java
+    javac -d . **/*.java
     java Server.Central
 
 Case of the client : <br />
-Connect to the virtual machine grupo-18@10.10.2.79
+Connect to the virtual machine grupo-18@10.10.2.104
 
-    javac -d *.java
+    javac -d . **/*.java
     java Client.Client
     
 Case of the district server : <br />
-Connect to the virtual machine grupo-18@10.10.2.104
+Connect to the virtual machine grupo-18@10.10.2.79
     
-    javac -d *.java
+    javac -d . **/*.java
     java Distributed.Distributed
     
 *How to initialize each entity*
@@ -36,4 +36,9 @@ You can then choose other action to do with the menu.
 
 Case of the district: <br />
 You firstly have to register the multicast ip and port, and the ip and port reserved to listen the requests from clients.
-You can create new Titans from here. 
+
+CAUTION : The multicast ip must be in the range 224.0.0.0 to 239.255.255.255
+
+You can then choose other action to do with the menu. 
+
+GENERAL CAUTION : All port have to be between 5000 and 5500
