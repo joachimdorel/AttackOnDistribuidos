@@ -3,3 +3,9 @@
 /out/
 *.iws
 **/.idea/
+**/src/Client/Util/
+**/src/Client/Creature/
+**/src/Server/Util/
+**/src/Server/Creature/
+**/src/Distributed/Util/
+**/src/Distributed/Creature/

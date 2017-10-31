@@ -7,6 +7,10 @@ public class Client {
     public Client(String name){
         this.name = name;
     }
+    public Client(String name, String connectedToDistrict) {
+        this.name = name;
+        this.connectedToDistrict = connectedToDistrict;
+    }
 
     public String getConnectedToDistrict(){
         return connectedToDistrict;

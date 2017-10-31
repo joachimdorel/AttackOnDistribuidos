@@ -15,8 +15,7 @@ import static Server.Central.scanGlobal;
 public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
-    //The group address must be in the range 224.0.0.0 to 239.255.255.255
-    //TODO rentrer en dynamique par dans la console
+    //TODO rentrer en dynamique par dans la console ??
     private static final String IP_SERVER = "192.168.1.11";
     private static final int PORT_SERVER = 9000;
     private ArrayList<District> districts;
@@ -36,11 +35,16 @@ public class Central {
 
         Thread connectionClient = new Thread(new AcceptClient(c1.districts, c1.clients));
         connectionClient.start();
-        System.out.println("Thread connectionClient lunch!");
+
+        System.out.println("Thread connectionClient launched!");
+
+        //TODO to remove
+        //Ajout d'un seul district
+        c1.addDistrict(scan);
 
         Thread generatorID = new Thread(new GeneratorID());
         generatorID.start();
-        System.out.println("Thread generatorID lunch!");
+        System.out.println("Thread generatorID launched!");
 
         c1.openMenu();
 
@@ -214,7 +218,7 @@ class AcceptClient extends Thread {
                     mbSend.put(Const.KEY_DISTRICT_MULTICAST_PORT, districtReturned.getMulticastPort());
                     updateClientList(socket.getRemoteSocketAddress().toString(), clientDistrictName);
                 }else{
-                    mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_REFUSE);
+                    mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_REFUSED);
                 }
             } else {
                 mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_IMPOSSIBLE);
@@ -261,10 +265,12 @@ class AcceptClient extends Thread {
         while(!update && clientIterator.hasNext()){
             if (clientIterator.next().getName().equals(clientName)) {
                 update = true;
-                //TODO update the list
+                clientIterator.next().setConnectedToDistrict(districtConnectedTo);
             }
         }
-        //TODO update the list adding new client
+        if(!update){
+            clients.add(new Client(clientName, districtConnectedTo));
+        }
     }
 }
 
@@ -275,7 +281,7 @@ class AcceptClient extends Thread {
 class GeneratorID extends Thread {
     private static Integer generator_ID = 1;
     private final int PORT_SERVER = 9000;
-    //private final String IP_SERVER = "192.168.1.30"; //10.10.18.40 (Camille) //TODO to remove
+    //private final String IP_SERVER = "192.168.1.30"; //TODO to remove
 
     public void run() {
         try{
@@ -312,6 +318,7 @@ class GeneratorID extends Thread {
                 final InetAddress IPAddress = receivePacket.getAddress();
                 final int port = receivePacket.getPort();
 
+                //TODO to remove
                 System.out.println("From: " + IPAddress + ":" + port);
                 System.out.println("Message: " + message.toJson());
 

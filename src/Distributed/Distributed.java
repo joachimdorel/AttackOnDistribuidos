@@ -38,17 +38,25 @@ public class Distributed {
         System.out.println("[" + DISTRIBUTED + "] " + "Server name : ");
         String name = scan.next();
         Distributed d = new Distributed(name);
+        d.initialize(scan);
 
+        System.out.println("TEST" + d.titansList);
+        ClientRequests clientRequests = new ClientRequests(d.requestIP, d.requestPort, d.titansList);
+        clientRequests.start();
+        System.out.println("Thread clientRequests launched!");
+
+
+        d.connectionToMulticast();
+        d.openMenu(scan);
         //TODO gestion des threads
 
-        System.out.println("Name main thread : " + Thread.currentThread().getName());
-        d.initialize(scan);
-        //d.connectionToMulticast();
-        d.openMenu(scan);
+
         scan.close();
+		d.socketMulticast.close();
     }
 
     private void initialize(Scanner scan){
+        //The multicast ip must be in the range 224.0.0.0 to 239.255.255.255
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast IP : ");
         multicastIP = scan.next();
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast port : ");
@@ -78,32 +86,20 @@ public class Distributed {
 
 
     //TODO : send a mensage to the multicast each time there is a modification
+
+
+
+	// function that connect the district to his multicast address
     private void connectionToMulticast(){
-        InetAddress groupAddress;
-        MulticastSocket socketMulticast;
-        //TODO : to change, only a test --> send message when occur a change
-        // Open a new DatagramSocket, which will be used to send the data.
         try {
-            socketMulticast = new MulticastSocket(multicastPort);
+            socketMulticast = new MulticastSocket();
             groupAddress = InetAddress.getByName(multicastIP);
-			socketMulticast.setTimeToLive(15);
-
-            DatagramSocket serverSocket = new DatagramSocket();
-            for (int i = 0; i < 5; i++) {
-                String msg = "Sent message no " + i;
-
-                // TODO Create a packet that will contain the data
-                // (in the form of bytes) and send it.
-                DatagramPacket msgPacket = new DatagramPacket(msg.getBytes(),
-                msg.getBytes().length, groupAddress, multicastPort);
-                serverSocket.send(msgPacket);
-
-                System.out.println("Server sent packet with msg: " + msg);
-            }
+			System.out.println("Connection établie entre serveur et multicast");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
+
 
     /**
      * Function displaying the menu and switching between the modes
@@ -138,9 +134,9 @@ public class Distributed {
         }
     }
 
-
+	// function that create a new titan, and then send the new list of titans modified to the multicast.
     private void titanPublication(Scanner scan) throws IOException {
-        System.out.println("[" + DISTRIBUTED + name + " ] " + "Publish titan");
+        System.out.println("[" + DISTRIBUTED + name + " ] " + "---Publish titan---");
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Enter a name : ");
         String titanName = scan.next();
         System.out.println("[ " + DISTRIBUTED + name + " ] " + "Select a type : ");
@@ -156,7 +152,7 @@ public class Distributed {
         }
         int id = requestID();
         if(id == -1){
-            System.out.println("[" + DISTRIBUTED + name + " ] " + "There were a problem : impossible to get an id for the new titan");
+            System.out.println("[" + DISTRIBUTED + name + " ] " + "There was a problem : impossible to get an id for the new titan");
         } else {
             Titans newTitan = new Titans(titanName, type, id, name);
             titansList.add(newTitan);
@@ -167,13 +163,11 @@ public class Distributed {
             System.out.println("Type: " + newTitan.getType());
             System.out.println("************");
 
-            //TODO remove the comment
-            //sendTitansListMulticast();
+            sendTitansListMulticast();
         }
     }
 
 
-    //TODO : think about this function
     private int requestID(){
         int newId = -1;
         MessageBroker mb = new MessageBroker();
@@ -196,13 +190,15 @@ public class Distributed {
                 socket.receive(receivePacket);
                 final MessageBroker dataReceived = new MessageBroker(new String(receivePacket.getData()));
                 newId = dataReceived.getIntegerValue(Const.REQ_CONTENT);
+
+                //TODO to remove
                 final InetAddress returnIPAddress = receivePacket.getAddress();
                 final int port = receivePacket.getPort();
                 System.out.println("From server at: " + returnIPAddress + ":"
                         + port);
                 System.out.println("Message: " + dataReceived.toJson());
             } catch (final SocketTimeoutException ste){
-                System.out.println("Timeout Occurrend : Packet assumed lost");
+                System.out.println("Timeout Occurred : Packet assumed lost");
             }
             socket.close();
         } catch (SocketException e) {
@@ -215,32 +211,147 @@ public class Distributed {
         return newId;
     }
 
+
+	//Function that sends the current Titans' list throught the multicast
 	private void sendTitansListMulticast() throws IOException {
-			byte[] contenuMessage;
-			DatagramPacket message;
+        byte[] contenuMessage;
+        DatagramPacket message;
+        try{
+            MessageBroker listToSend = new MessageBroker();
 
-			MessageBroker listToSend = new MessageBroker();
-			String stringToSend;
-			listToSend.put(Const.REQ_TITAN_LIST, (Serializable) titansList);
-			stringToSend=listToSend.toJson();
-			ByteArrayOutputStream sortie = 	new ByteArrayOutputStream(); 
+            String stringToSend;
+            listToSend.put(Const.REQ_TITAN_LIST, (Serializable) titansList);
+            stringToSend=listToSend.toJson();
+            ByteArrayOutputStream sortie = 	new ByteArrayOutputStream();
 
-			(new DataOutputStream(sortie)).writeUTF(stringToSend); 
-			contenuMessage = sortie.toByteArray();
-			message = new DatagramPacket(contenuMessage, contenuMessage.length, groupAddress, multicastPort);
-			socketMulticast.send(message);
-	  
-		
+            (new DataOutputStream(sortie)).writeUTF(stringToSend);
+            contenuMessage = sortie.toByteArray();
+            message = new DatagramPacket(contenuMessage, contenuMessage.length, groupAddress, multicastPort);
+            socketMulticast.send(message);
+            System.out.println("[" + DISTRIBUTED + name + " ] " + "Message sent to multicast");
+            System.out.println("");
+        }catch (Exception exc) {
+            exc.printStackTrace();
+        }
 	}
-	//TODO
-	/*private void captureRequest(int id){
-		
-	}
-
-
-	private void killRequest(int id){
-		
-	}*/
-	
-
 }
+
+//-------------------------------------------------------------------------------------
+//---------------------------CLIENT REQUESTS THREAD------------------------------------
+//-------------------------------------------------------------------------------------
+
+class ClientRequests extends Thread {
+    private String requestIP;
+    private int requestPort;
+    private final ArrayList<Titans> titansList;
+
+    public ClientRequests (String requestIP, int requestPort, ArrayList<Titans> titansList){
+        this.requestIP = requestIP;
+        this.requestPort = requestPort;
+        this.titansList = titansList;
+    }
+
+    public void run() {
+        try{
+            while(true){
+                listenRequests();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void listenRequests (){
+        try {
+//            InetAddress requestIPInetAddress = InetAddress.getByName(requestIP); //works by in a thread create a new IP
+            InetAddress requestIPInetAddress = InetAddress.getLocalHost(); //TODO to change
+
+            final DatagramSocket serverSocket = new DatagramSocket(requestPort, requestIPInetAddress);
+            byte[] receiveData;
+            byte[] sendData;
+            //TODO to remove
+            System.out.println("Local address : " + serverSocket.getLocalAddress());
+
+            while (true) {
+                receiveData = new byte[100];
+                final DatagramPacket receivePacket = new DatagramPacket(receiveData,
+                        receiveData.length);
+                System.out.println("Waiting for datagram packet");
+                serverSocket.receive(receivePacket);
+                MessageBroker messageReceived = new MessageBroker(new String(receivePacket.getData()));
+                final InetAddress IPAddress = receivePacket.getAddress();
+                final int port = receivePacket.getPort();
+
+                //TODO to remove
+                System.out.println("From: " + IPAddress + ":" + port);
+                System.out.println("Message: " + messageReceived.toJson());
+
+                MessageBroker messageToSent = new MessageBroker(Const.REQ_TYPE, messageReceived.getStringValue(Const.REQ_TYPE));
+                if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CAPTURE_TITAN)){
+                    //TODO : put the request in a fifo
+
+                    //TODO : if request accepted --> sendTitansListMulticast();
+                    synchronized (titansList){
+                        Titans titan = titanIsThere(messageReceived.getIntegerValue(Const.REQ_CONTENT));
+                        if(titan != null){
+                            System.out.println("The titan was find");
+                            //to be captured the titan has to be normal or inconstant
+                            if(titan.getType().equals(Const.TYPE_TITAN_ECCENTRIC)){
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                            } else {
+                                System.out.println("we remove the titan");
+                                titansList.remove(titan);
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_ACCEPTED);
+                            }
+                        } else {
+                            messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                        }
+                        System.out.println("TEST : "+ titansList);
+                    }
+                } else if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_KILL_TITAN)){
+                    synchronized (titansList){
+                        Titans titan = titanIsThere(messageReceived.getIntegerValue(Const.REQ_CONTENT));
+                        if(titan != null){
+                            //to be killed the titan has to be normal or eccentric
+                            if(titan.getType().equals(Const.TYPE_TITAN_INCONSTANT)){
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                            } else {
+                                titansList.remove(titan);
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_ACCEPTED);
+                            }
+                        } else {
+                            messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                        }
+                        System.out.println("TEST : "+ titansList);
+                    }
+                } else if (messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_TITAN_LIST)){
+                    messageToSent.put(Const.REQ_CONTENT, (Serializable) titansList);
+                }
+                //TODO : the else if for the first connection
+                sendData = messageToSent.toJson().getBytes();
+                final DatagramPacket sendPacket = new DatagramPacket(sendData,
+                        sendData.length, IPAddress, port);
+                serverSocket.send(sendPacket);
+            }
+
+        } catch (final SocketException ex) {
+            ex.printStackTrace();
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Titans titanIsThere (int id) {
+        Titans titanToReturn = null;
+        Iterator<Titans> titanIterator = titansList.iterator();
+        while(titanToReturn==null && titanIterator.hasNext()){
+            Titans t = titanIterator.next();
+            if (t.getID().equals(id)) {
+                titanToReturn = t;
+            }
+        }
+        return titanToReturn;
+    }
+}
+
+
