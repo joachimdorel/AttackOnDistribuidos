@@ -38,13 +38,17 @@ public class Distributed {
         System.out.println("[" + DISTRIBUTED + "] " + "Server name : ");
         String name = scan.next();
         Distributed d = new Distributed(name);
-
-        //TODO gestion des threads
-
-        System.out.println("Name main thread : " + Thread.currentThread().getName());
         d.initialize(scan);
+
+        System.out.println("TEST" + d.titansList);
+        ClientRequests clientRequests = new ClientRequests(d.requestIP, d.requestPort, d.titansList);
+        clientRequests.start();
+        System.out.println("Thread clientRequests launched!");
+
+
         d.connectionToMulticast();
         d.openMenu(scan);
+        //TODO gestion des threads
 
 
         scan.close();
@@ -52,6 +56,7 @@ public class Distributed {
     }
 
     private void initialize(Scanner scan){
+        //The multicast ip must be in the range 224.0.0.0 to 239.255.255.255
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast IP : ");
         multicastIP = scan.next();
         System.out.println("[" + DISTRIBUTED + name + " ] " + "Multicast port : ");
@@ -163,7 +168,6 @@ public class Distributed {
     }
 
 
-    //TODO : think about this function
     private int requestID(){
         int newId = -1;
         MessageBroker mb = new MessageBroker();
@@ -186,6 +190,8 @@ public class Distributed {
                 socket.receive(receivePacket);
                 final MessageBroker dataReceived = new MessageBroker(new String(receivePacket.getData()));
                 newId = dataReceived.getIntegerValue(Const.REQ_CONTENT);
+
+                //TODO to remove
                 final InetAddress returnIPAddress = receivePacket.getAddress();
                 final int port = receivePacket.getPort();
                 System.out.println("From server at: " + returnIPAddress + ":"
@@ -225,21 +231,91 @@ public class Distributed {
 				System.out.println("[" + DISTRIBUTED + name + " ] " + "Message sent to multicast");
 				System.out.println("");
 		  	}catch (Exception exc) {
-			   System.out.println(exc);
+			  exc.printStackTrace();
 			}
 		
 	}
-
-
-	//TODO
-	/*private void captureRequest(int id){
-		sendTitansListMulticast();
-	}
-
-
-	private void killRequest(int id){
-		sendTitansListMulticast();
-	}*/
-	
-
 }
+
+//-------------------------------------------------------------------------------------
+//---------------------------CLIENT REQUESTS THREAD------------------------------------
+//-------------------------------------------------------------------------------------
+
+class ClientRequests extends Thread {
+    private String requestIP;
+    private int requestPort;
+    private ArrayList<Titans> titansList;
+
+    public ClientRequests (String requestIP, int requestPort, ArrayList<Titans> titansList){
+        this.requestIP = requestIP;
+        this.requestPort = requestPort;
+        this.titansList = titansList;
+    }
+
+    public void run() {
+        try{
+            while(true){
+                listenRequests();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void listenRequests (){
+        try {
+            //TODO to remove from here, but the synchronization works --> prevent the main!!
+            synchronized (titansList){
+                titansList.add(new Titans("name", "type", 1, "toto"));
+            }
+
+//            InetAddress requestIPInetAddress = InetAddress.getByName(requestIP); //works by in a thread create a new IP
+            InetAddress requestIPInetAddress = InetAddress.getLocalHost(); //TODO to change
+
+            final DatagramSocket serverSocket = new DatagramSocket(requestPort, requestIPInetAddress);
+            byte[] receiveData;
+            byte[] sendData;
+            //TODO to remove
+            System.out.println("Local address : " + serverSocket.getLocalAddress());
+            System.out.println("Local address : " + serverSocket.getLocalAddress());
+            while (true) {
+                receiveData = new byte[100];
+                final DatagramPacket receivePacket = new DatagramPacket(receiveData,
+                        receiveData.length);
+                System.out.println("Waiting for datagram packet");
+                serverSocket.receive(receivePacket);
+                MessageBroker messageReceived = new MessageBroker(new String(receivePacket.getData()));
+                final InetAddress IPAddress = receivePacket.getAddress();
+                final int port = receivePacket.getPort();
+
+                //TODO to remove
+                System.out.println("From: " + IPAddress + ":" + port);
+                System.out.println("Message: " + messageReceived.toJson());
+
+                MessageBroker messageToSent = new MessageBroker(Const.REQ_TYPE, messageReceived.getStringValue(Const.REQ_TYPE));
+                if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CAPTURE_TITAN)){
+
+                    //TODO : put the request in a fifo
+                    //TODO : treat the request : the titan exist in the list ?
+                    //TODO : update the TitansList
+                    //TODO : if request accepted --> sendTitansListMulticast();
+
+                } else if (messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_KILL_TITAN)){
+
+                }
+                //TODO : the else if for the first connection
+                sendData = messageToSent.toJson().getBytes();
+                final DatagramPacket sendPacket = new DatagramPacket(sendData,
+                        sendData.length, IPAddress, port);
+                serverSocket.send(sendPacket);
+            }
+
+        } catch (final SocketException ex) {
+            ex.printStackTrace();
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+

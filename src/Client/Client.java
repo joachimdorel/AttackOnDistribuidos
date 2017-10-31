@@ -9,6 +9,7 @@ import java.net.MulticastSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 
 public class Client {
@@ -124,6 +125,7 @@ public class Client {
 		}
 	}
 
+	//TODO
 	private void disconnectionDistrict (){
 
 	}
@@ -159,7 +161,7 @@ public class Client {
 			System.out.println("Réponse du serveur : "+ responseFromServer);
 
 			MessageBroker mbReceive = new MessageBroker(responseFromServer);
-			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_REFUSE)){
+			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_REFUSED)){
 				System.out.println(CLIENT+"The access of the district had been refused by the Central");
 				return false;
 			}
@@ -212,7 +214,7 @@ public class Client {
 				//TODO create the table of titans (and actualize it)!
 				System.out.println("");
 				System.out.println("List of the District's Titans :");
-				showListTitans(tabDistrictTitans);
+				showListTitansFromCurrentDistrict(tabDistrictTitans);
 				openMenu(scan);
 				break;
 
@@ -230,6 +232,7 @@ public class Client {
 				//capture titan
 				System.out.println("");
 				System.out.println("Enter the ID of the titan you want to capture :");
+				System.out.println("CAUTION: the titan has to be normal or inconstant ");
 				int wishToCapture=scan.nextInt();
 				boolean captured=captureTitan(wishToCapture);
 				if(captured){
@@ -244,6 +247,7 @@ public class Client {
 				//kill titan
 				System.out.println("");
 				System.out.println("Enter the ID of the titan you want to kill :");
+				System.out.println("CAUTION: the titan has to be normal or eccentric ");
 				int wishToKill=scan.nextInt();
 				boolean killed=killTitan(wishToKill);
 				if(killed){
@@ -259,7 +263,7 @@ public class Client {
 				//TODO create the table of captured titans (and actualize it)!
 				System.out.println("");
 				System.out.println("List of the captured Titans :");
-				showListTitans(tabCapturedTitans);
+				showListTitansFromAllDistrict(tabCapturedTitans);
 				openMenu(scan);
 				break;
 
@@ -268,7 +272,7 @@ public class Client {
 				//TODO create the table of killed titans (and actualize it)!
 				System.out.println("");
 				System.out.println("List of the killed Titans :");
-				showListTitans(tabKilledTitans);
+				showListTitansFromAllDistrict(tabKilledTitans);
 				openMenu(scan);
 		
 				break;
@@ -285,14 +289,27 @@ public class Client {
 
     /**
      * Function void used in the menu, to show a list of titans of the table entered in parameter
-     * @param tab
+     * @param tab a tab of Titans
      */
-	private void showListTitans(ArrayList<Titans> tab){
+	private void showListTitansFromCurrentDistrict(ArrayList<Titans> tab){
 		System.out.println("-------------------------------");
 		for (Titans titan : tab)
 			System.out.println(titan.getName() + ", ID : " + titan.getID() + ", type: " + titan.getType());
 	}
 
+	/**
+	 * Function void used in the menu, to show a list of titans of the table entered in parameter
+	 * This function prints the origin district of the Titans
+	 * @param tab a tab of Titans
+	 */
+	private void showListTitansFromAllDistrict(ArrayList<Titans> tab){
+		System.out.println("-------------------------------");
+		for (Titans titan : tab)
+			System.out.println(titan.getName()
+					+ ", ID : " + titan.getID()
+					+ ", type: " + titan.getType()
+					+ ", district: " + titan.getDistrict());
+	}
 
     /**
      * boolean function used in the menu to ask the district (port and ip address in parameter) to capture
@@ -301,42 +318,127 @@ public class Client {
      * @return true is the titan is captured, false otherwise
      */
     private boolean captureTitan(int idTitan){
-		boolean captured=false;
-		//TODO write the code of the function, that send message to the district to ask to capture the titan, and get the response back. return true if success, false if fail. +++ actualize the table from here
+		//TODO send message to the district to ask to capture the titan, and get the response back. return true if success, false if fail.
 		//CAUTION: the titan has to be normal or inconstant
-		return captured;
+		Titans titanCaptured = null;
+		Boolean find = false;
+		Iterator<Titans> titanIterator = tabDistrictTitans.iterator();
+		while(!find && titanIterator.hasNext()){
+			if (titanIterator.next().getID().equals(idTitan)) {
+				find = true;
+				titanCaptured = titanIterator.next();
+			}
+		}
+		if(!find){
+			System.out.println(CLIENT+"The titan you want to capture isn't in the list of available titans");
+			return false;
+		}
+		MessageBroker mbRequest = new MessageBroker();
+		mbRequest.put(Const.REQ_TYPE, Const.REQ_CAPTURE_TITAN);
+		mbRequest.put(Const.REQ_CONTENT, idTitan);
+		if (!requestToDistrict(mbRequest.toJson())){
+			return false;
+		}
+		titanCaptured.setStatus(Const.STATE_TITAN_CAPTURED);
+		tabCapturedTitans.add(titanCaptured);
+		return true;
 	}
 
 
     /**
      * 	// boolean function used in the menu to ask the district (port and ip address in parameter) to kill a titan
      * 	(id en parameter)
-     * @param idTitan
+     * @param idTitan the id of the Titan to kill
      * @return true is the titan is killed, false otherwise
      */
 	private boolean killTitan(int idTitan){
-		boolean killed=false;
-		//TODO write the code of the function, that send message to the district to ask to kill the titan, and get the response back. return true if success, false if fail. +++ actualize the table from here
+		//TODO write the code of the function, that send message to the district to ask to kill the titan, and get the response back. return true if success, false if fail.
 		//CAUTION: the titan has to be normal or eccentric
-		return killed;
+		Titans titanKilled = null;
+		Boolean find = false;
+		Iterator<Titans> titanIterator = tabDistrictTitans.iterator();
+		while(!find && titanIterator.hasNext()){
+			if (titanIterator.next().getID().equals(idTitan)) {
+				find = true;
+				titanKilled = titanIterator.next();
+			}
+		}
+		if(!find){
+			System.out.println(CLIENT+"The titan you want to capture isn't in the list of available titans");
+			return false;
+		}
+		MessageBroker mbRequest = new MessageBroker();
+		mbRequest.put(Const.REQ_TYPE, Const.REQ_KILL_TITAN);
+		mbRequest.put(Const.REQ_CONTENT, idTitan);
+		if (!requestToDistrict(mbRequest.toJson())){
+			return false;
+		}
+		titanKilled.setStatus(Const.STATE_TITAN_DEAD);
+		tabKilledTitans.add(titanKilled);
+		return true;
+	}
+
+
+	private Boolean requestToDistrict(String message){
+		//TODO: make the UDP
+		Boolean requestAccepted = false;
+		try{
+			final DatagramSocket socket = new DatagramSocket();
+			final byte[] receiveData = new byte[100];
+			final DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
+			byte[] sendRequest;
+			sendRequest = message.getBytes();
+			System.out.println("---- ready to send data");
+			InetAddress IPCentralAddress = InetAddress.getByName(ipDistrict);
+			final DatagramPacket sendPacket = new DatagramPacket(
+					sendRequest, sendRequest.length,IPCentralAddress, portDistrict);
+			socket.send(sendPacket);
+			socket.setSoTimeout(10000);
+			try{
+				socket.receive(receivePacket);
+				final MessageBroker dataReceived = new MessageBroker(new String(receivePacket.getData()));
+				if(dataReceived.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_REQUEST_ACCEPTED)){
+					requestAccepted = true;
+				}
+
+				//TODO to remove
+				final InetAddress returnIPAddress = receivePacket.getAddress();
+				final int port = receivePacket.getPort();
+				System.out.println("From server at: " + returnIPAddress + ":"
+						+ port);
+				System.out.println("Message: " + dataReceived.toJson());
+			} catch (final SocketTimeoutException ste){
+				System.out.println("Timeout Occurrend : Packet assumed lost");
+			}
+			socket.close();
+		} catch (SocketException e) {
+			e.printStackTrace();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return requestAccepted;
 	}
 
 }
 
 class Receptor extends Thread {
-	InetAddress groupeIP;
-	int port;
-	String nom;
-	MulticastSocket socketReception;
-	ArrayList<Titans> tabDistrictTitans;
+	private InetAddress groupIP;
+	private int port;
+	private String nom;
+	private MulticastSocket socketReception;
+	private ArrayList<Titans> tabDistrictTitans;
 
-	Receptor(InetAddress groupeIP, int port, String nom, ArrayList<Titans> tabDistrictTitans)  throws Exception {
-		this.groupeIP = groupeIP;
+	Receptor(InetAddress groupIP, int port, String nom, ArrayList<Titans> tabDistrictTitans)  throws Exception {
+		this.groupIP = groupIP;
 		this.port = port;
 		this.nom = nom;
 		this.tabDistrictTitans = tabDistrictTitans;
 		socketReception = new MulticastSocket(port);
-		socketReception.joinGroup(groupeIP);
+		socketReception.joinGroup(groupIP);
 		start();
 	}
 
@@ -357,7 +459,7 @@ class Receptor extends Thread {
 				System.out.println(texte);
 			}
 			catch(Exception exc) {
-				System.out.println(exc);
+				exc.printStackTrace();
 			}
 		}
 	}

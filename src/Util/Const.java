@@ -41,8 +41,12 @@ public class Const {
     public static final String REQ_DISTRICT_LIST = "district_list";
 
     //----------Value of a request district access content
-    public static final String VALUE_ACCESS_REFUSE = "accessRefuse";
+    public static final String VALUE_ACCESS_REFUSED = "accessRefused";
     public static final String VALUE_ACCESS_ACCEPTED = "accessAccepted";
     public static final String VALUE_ACCESS_IMPOSSIBLE = "accessImpossible";
+
+    //---------Value of a request to kill or capture a titan
+    public static final String VALUE_REQUEST_ACCEPTED = "requestAccepted";
+    public static final String VALUE_REQUEST_REFUSED = "requestRefused";
 
 }
