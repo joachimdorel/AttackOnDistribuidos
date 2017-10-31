@@ -345,9 +345,9 @@ class ClientRequests extends Thread {
         Titans titanToReturn = null;
         Iterator<Titans> titanIterator = titansList.iterator();
         while(titanToReturn==null && titanIterator.hasNext()){
-            if (titanIterator.next().getID().equals(id)) {
-                System.out.println("TEST in titanISThere : " + titanIterator.next().getName());
-                titanToReturn = titanIterator.next();
+            Titans t = titanIterator.next();
+            if (t.getID().equals(id)) {
+                titanToReturn = t;
             }
         }
         return titanToReturn;

@@ -309,9 +309,10 @@ public class Client {
 		Boolean find = false;
 		Iterator<Titans> titanIterator = tabDistrictTitans.iterator();
 		while(!find && titanIterator.hasNext()){
-			if (titanIterator.next().getID().equals(idTitan)) {
+			Titans t = titanIterator.next();
+			if (t.getID().equals(idTitan)) {
 				find = true;
-				titanCaptured = titanIterator.next();
+				titanCaptured = t;
 			}
 		}
 		if(!find){
@@ -343,9 +344,10 @@ public class Client {
 		Boolean find = false;
 		Iterator<Titans> titanIterator = tabDistrictTitans.iterator();
 		while(!find && titanIterator.hasNext()){
-			if (titanIterator.next().getID().equals(idTitan)) {
+			Titans t = titanIterator.next();
+			if (t.getID().equals(idTitan)) {
 				find = true;
-				titanKilled = titanIterator.next();
+				titanKilled = t;
 			}
 		}
 		if(!find){
