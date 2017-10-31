@@ -198,7 +198,7 @@ public class Distributed {
                         + port);
                 System.out.println("Message: " + dataReceived.toJson());
             } catch (final SocketTimeoutException ste){
-                System.out.println("Timeout Occurrend : Packet assumed lost");
+                System.out.println("Timeout Occurred : Packet assumed lost");
             }
             socket.close();
         } catch (SocketException e) {
@@ -214,26 +214,25 @@ public class Distributed {
 
 	//Function that sends the current Titans' list throught the multicast
 	private void sendTitansListMulticast() throws IOException {
-			byte[] contenuMessage;
-			DatagramPacket message;
-			try{
-				MessageBroker listToSend = new MessageBroker();
+        byte[] contenuMessage;
+        DatagramPacket message;
+        try{
+            MessageBroker listToSend = new MessageBroker();
 
-				String stringToSend;
-				listToSend.put(Const.REQ_TITAN_LIST, (Serializable) titansList);
-				stringToSend=listToSend.toJson();
-				ByteArrayOutputStream sortie = 	new ByteArrayOutputStream(); 
+            String stringToSend;
+            listToSend.put(Const.REQ_TITAN_LIST, (Serializable) titansList);
+            stringToSend=listToSend.toJson();
+            ByteArrayOutputStream sortie = 	new ByteArrayOutputStream();
 
-				(new DataOutputStream(sortie)).writeUTF(stringToSend); 
-				contenuMessage = sortie.toByteArray();
-				message = new DatagramPacket(contenuMessage, contenuMessage.length, groupAddress, multicastPort);
-				socketMulticast.send(message);
-				System.out.println("[" + DISTRIBUTED + name + " ] " + "Message sent to multicast");
-				System.out.println("");
-		  	}catch (Exception exc) {
-			  exc.printStackTrace();
-			}
-		
+            (new DataOutputStream(sortie)).writeUTF(stringToSend);
+            contenuMessage = sortie.toByteArray();
+            message = new DatagramPacket(contenuMessage, contenuMessage.length, groupAddress, multicastPort);
+            socketMulticast.send(message);
+            System.out.println("[" + DISTRIBUTED + name + " ] " + "Message sent to multicast");
+            System.out.println("");
+        }catch (Exception exc) {
+            exc.printStackTrace();
+        }
 	}
 }
 
@@ -244,7 +243,7 @@ public class Distributed {
 class ClientRequests extends Thread {
     private String requestIP;
     private int requestPort;
-    private ArrayList<Titans> titansList;
+    private final ArrayList<Titans> titansList;
 
     public ClientRequests (String requestIP, int requestPort, ArrayList<Titans> titansList){
         this.requestIP = requestIP;
@@ -264,11 +263,6 @@ class ClientRequests extends Thread {
 
     private void listenRequests (){
         try {
-            //TODO to remove from here, but the synchronization works --> prevent the main!!
-            synchronized (titansList){
-                titansList.add(new Titans("name", "type", 1, "toto"));
-            }
-
 //            InetAddress requestIPInetAddress = InetAddress.getByName(requestIP); //works by in a thread create a new IP
             InetAddress requestIPInetAddress = InetAddress.getLocalHost(); //TODO to change
 
@@ -277,7 +271,7 @@ class ClientRequests extends Thread {
             byte[] sendData;
             //TODO to remove
             System.out.println("Local address : " + serverSocket.getLocalAddress());
-            System.out.println("Local address : " + serverSocket.getLocalAddress());
+
             while (true) {
                 receiveData = new byte[100];
                 final DatagramPacket receivePacket = new DatagramPacket(receiveData,
@@ -294,14 +288,44 @@ class ClientRequests extends Thread {
 
                 MessageBroker messageToSent = new MessageBroker(Const.REQ_TYPE, messageReceived.getStringValue(Const.REQ_TYPE));
                 if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CAPTURE_TITAN)){
-
                     //TODO : put the request in a fifo
-                    //TODO : treat the request : the titan exist in the list ?
-                    //TODO : update the TitansList
+
                     //TODO : if request accepted --> sendTitansListMulticast();
-
-                } else if (messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_KILL_TITAN)){
-
+                    synchronized (titansList){
+                        Titans titan = titanIsThere(messageReceived.getIntegerValue(Const.REQ_CONTENT));
+                        if(titan != null){
+                            System.out.println("The titan was find");
+                            //to be captured the titan has to be normal or inconstant
+                            if(titan.getType().equals(Const.TYPE_TITAN_ECCENTRIC)){
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                            } else {
+                                System.out.println("we remove the titan");
+                                titansList.remove(titan);
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_ACCEPTED);
+                            }
+                        } else {
+                            messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                        }
+                        System.out.println("TEST : "+ titansList);
+                    }
+                } else if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_KILL_TITAN)){
+                    synchronized (titansList){
+                        Titans titan = titanIsThere(messageReceived.getIntegerValue(Const.REQ_CONTENT));
+                        if(titan != null){
+                            //to be killed the titan has to be normal or eccentric
+                            if(titan.getType().equals(Const.TYPE_TITAN_INCONSTANT)){
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                            } else {
+                                titansList.remove(titan);
+                                messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_ACCEPTED);
+                            }
+                        } else {
+                            messageToSent.put(Const.REQ_CONTENT, Const.VALUE_REQUEST_REFUSED);
+                        }
+                        System.out.println("TEST : "+ titansList);
+                    }
+                } else if (messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_TITAN_LIST)){
+                    messageToSent.put(Const.REQ_CONTENT, (Serializable) titansList);
                 }
                 //TODO : the else if for the first connection
                 sendData = messageToSent.toJson().getBytes();
@@ -315,6 +339,18 @@ class ClientRequests extends Thread {
         } catch (final IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private Titans titanIsThere (int id) {
+        Titans titanToReturn = null;
+        Iterator<Titans> titanIterator = titansList.iterator();
+        while(titanToReturn==null && titanIterator.hasNext()){
+            if (titanIterator.next().getID().equals(id)) {
+                System.out.println("TEST in titanISThere : " + titanIterator.next().getName());
+                titanToReturn = titanIterator.next();
+            }
+        }
+        return titanToReturn;
     }
 }
 

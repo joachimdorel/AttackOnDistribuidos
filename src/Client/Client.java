@@ -57,33 +57,9 @@ public class Client {
      * @param scan
      */
     private  void connectionServer(Scanner scan) throws Exception {
-		//TODO TO REMOVE
-		/*
-
-		//test avec titan et list de titan
-		MessageBroker m4 = new MessageBroker();
-		Titans newTitan = new Titans("Hero", Const.TYPE_TITAN_NORMAL, "TROST");
-		Titans newTitan2 = new Titans("Hero2", Const.TYPE_TITAN_NORMAL, "TROST2");
-		ArrayList<Titans> listTitan = new ArrayList<Titans>();
-		listTitan.add(newTitan);
-		listTitan.add(newTitan2);
-		m4.put("un titan", (Serializable) newTitan);
-		m4.put(Const.REQ_TITAN_LIST, (Serializable) listTitan);
-		String s4 = m4.toJson();
-		System.out.println(s4);
-		MessageBroker m5 = new MessageBroker(s4);
-		ArrayList<Titans> list = m5.getListTitansValue(Const.REQ_TITAN_LIST);
-		System.out.println("NAME  : " + list.get(1).getName());
-		Titans titanTest = m5.getTitansValue("un titan");
-		System.out.println("NAME 2 : " + titanTest.getName());
-//*/
-
-
         System.out.println(CLIENT+"Enter IP Server Central:");
         ipServer = scan.next();
         System.out.println(CLIENT+"Enter Port Server Central:");
-        //TODO Remove when it will matter
-        System.out.println(CLIENT+"Currently on 9000:");
         while (!scan.hasNextInt()) {
             System.out.println("You have badly written the port, do it again (it has to be an integer)");
             scan.next();
@@ -91,7 +67,7 @@ public class Client {
 		portServer = scan.nextInt();
 		try{
 			socketCentral=new Socket(ipServer,portServer);
-			System.out.println("Socket between the client and the central server has been established. They can now comunicate.");
+			System.out.println("Socket between the client and the central server has been established. They can now communicate.");
 		}catch(UnknownHostException e){
 			e.printStackTrace();
 		}catch(IOException e){
@@ -107,8 +83,6 @@ public class Client {
      */
 	private  void connectDistrict(Scanner scan) throws Exception {
 		System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
-		//TODO Remove when it will matter + print a list of existing District
-		System.out.println(CLIENT+"Currently does not matter");
 		String districtName = scan.next();
 		//TODO check connection
 		if(askServerCentral(districtName)) {
@@ -117,8 +91,8 @@ public class Client {
 			int port= portMulticast;
 			Thread threadMessageMulti = new Thread(new Receptor(groupIP, port, districtName, tabDistrictTitans));
 			threadMessageMulti.start();
-
 			System.out.println("You are now connected to " + districtName + " !");
+			firstConnectionToDistrict();
 		    openMenu(scan);
 		}else{
 		    System.out.println("Authorization refused from the server central.");
@@ -186,6 +160,17 @@ public class Client {
 
 		return(true);
     }
+
+    private void firstConnectionToDistrict(){
+		MessageBroker mbRequest = new MessageBroker();
+		mbRequest.put(Const.REQ_TYPE, Const.REQ_TITAN_LIST);
+		System.out.println("FIRST TEST : "+ tabDistrictTitans);
+		if (!requestToDistrict(mbRequest.toJson())){
+			System.out.println(CLIENT+"There were a problem, we couldn't synchronize your data with the district data");
+		} else {
+			System.out.println("TTEEEESST : "+ tabDistrictTitans);
+		}
+	}
 
 
 
@@ -384,7 +369,7 @@ public class Client {
 		Boolean requestAccepted = false;
 		try{
 			final DatagramSocket socket = new DatagramSocket();
-			final byte[] receiveData = new byte[100];
+			final byte[] receiveData = new byte[1024];
 			final DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
 			byte[] sendRequest;
@@ -397,8 +382,13 @@ public class Client {
 			socket.setSoTimeout(10000);
 			try{
 				socket.receive(receivePacket);
-				final MessageBroker dataReceived = new MessageBroker(new String(receivePacket.getData()));
+				MessageBroker dataReceived = new MessageBroker(new String(receivePacket.getData()));
 				if(dataReceived.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_REQUEST_ACCEPTED)){
+					requestAccepted = true;
+				}
+				if (dataReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_TITAN_LIST)){
+					//Case of the response of a first connection
+					tabDistrictTitans = dataReceived.getListTitansValue(Const.REQ_CONTENT);
 					requestAccepted = true;
 				}
 
