@@ -9,9 +9,6 @@ import java.util.*;
 
 import static Server.Central.scanGlobal;
 
-//TODO when registrate a district : verify that it exists and add it in the list
-//TODO update the clients list when a client change his district or when other client appears
-
 public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
@@ -143,6 +140,46 @@ public class Central {
                 break;
         }
     }
+
+    /**
+     * To add a new district in the Central
+     * @param scan scanner can't be reopen
+     */
+    private void addDistrict(Scanner scan){
+        System.out.println(SERVER_CENTRAL+"ADD DISTRICT");
+        System.out.println(SERVER_CENTRAL+"District Name:");
+        String name = scan.next();
+        System.out.println(SERVER_CENTRAL+"Multicast IP:");
+        System.out.println("CAUTION : The multicast ip must be in the range 224.0.0.0 to 239.255.255.255");
+        String multicastIp = scan.next();
+        System.out.println(SERVER_CENTRAL+"Multicast Port:");
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
+            scan.next();
+        }
+        int multicastPort = scan.nextInt();
+        System.out.println(SERVER_CENTRAL+"Request IP:");
+        String requestIp = scan.next();
+        System.out.println(SERVER_CENTRAL+"Request Port:");
+        while (!scan.hasNextInt()) {
+            System.out.println("You have badly written the port, do it again (it has to be an integer)");
+            scan.next();
+        }
+        int requestPort = scan.nextInt();
+        if(!doesDistrictExists(name)) {
+            this.districts.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
+        }
+    }
+
+    private Boolean doesDistrictExists(String name){
+        for(District d: districts){
+            if(d.getName().equals(name)){
+                System.out.println("The district "+name+" already exists ! ");
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -268,7 +305,6 @@ class AcceptClient extends Thread {
 class GeneratorID extends Thread {
     private static Integer generator_ID = 1;
     private final int PORT_SERVER = 9000;
-    //private final String IP_SERVER = "192.168.1.30"; //TODO to remove
 
     public void run() {
         try{
@@ -299,7 +335,6 @@ class GeneratorID extends Thread {
                 receiveData = new byte[100];
                 final DatagramPacket receivePacket = new DatagramPacket(receiveData,
                         receiveData.length);
-                System.out.println("Waiting for datagram packet");
                 serverSocket.receive(receivePacket);
                 MessageBroker message = new MessageBroker(new String(receivePacket.getData()));
                 final InetAddress IPAddress = receivePacket.getAddress();
