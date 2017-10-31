@@ -92,7 +92,6 @@ public class Client {
 	private  void connectDistrict(Scanner scan) throws Exception {
 		System.out.println(CLIENT+"Enter the name of the District you want to Connect to:");
 		//TODO Remove when it will matter + print a list of existing District
-		System.out.println(CLIENT+"Currently does not matter");
 		String districtName = scan.next();
 		//TODO check connection
 		if(askServerCentral(districtName)) {
@@ -156,6 +155,7 @@ public class Client {
 			ipDistrict = mbReceive.getStringValue(Const.KEY_DISTRICT_REQUEST_IP);
 			IPMulticast = mbReceive.getStringValue(Const.KEY_DISTRICT_MULTICAST_IP);
 			portMulticast=mbReceive.getIntegerValue(Const.KEY_DISTRICT_MULTICAST_PORT);
+			System.out.println("----- DEBUG : "+portDistrict + " | " + ipDistrict + " | " + IPMulticast + " | " + portMulticast);
 
             inputStream.close();
             objectOutputStream.close();

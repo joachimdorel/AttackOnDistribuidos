@@ -5,10 +5,9 @@ import Util.MessageBroker;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+
+import static Server.Central.scanGlobal;
 
 //TODO when registrate a district : verify that it exists and add it in the list
 //TODO update the clients list when a client change his district or when other client appears
@@ -33,10 +32,9 @@ public class Central {
 
     public static void main(String[] args){
         System.out.println(SERVER_CENTRAL);
-        Scanner scan = new Scanner(System.in);  // Reading from System.in
         Central c1 = new Central();
 
-        Thread connectionClient = new Thread(new AcceptClient(c1.districts, c1.clients, scan));
+        Thread connectionClient = new Thread(new AcceptClient(c1.districts, c1.clients));
         connectionClient.start();
         System.out.println("Thread connectionClient lunch!");
 
@@ -44,85 +42,69 @@ public class Central {
         generatorID.start();
         System.out.println("Thread generatorID lunch!");
 
-        c1.openMenu(scan);
+        c1.openMenu();
 
-        scan.close();
+        scanGlobal("close", null);
+    }
+
+
+    public static String scanGlobal(String threadName, ArrayList<District> districtsScan){
+        Scanner scan = new Scanner(System.in);  // Reading from System.in
+        int returnedValue = 0;
+
+        if(threadName.equals("giveAuthorization")) {
+            System.out.println("1. - YES");
+            System.out.println("2. - NO");
+            returnedValue = Integer.parseInt(scan.next());
+
+            //Displaying the menu
+            System.out.println("    -    ");
+            System.out.println(SERVER_CENTRAL + "Console");
+            System.out.println(SERVER_CENTRAL + "(1) List of the Districts");
+            System.out.println(SERVER_CENTRAL + "(2) List of the Clients");
+            System.out.println(SERVER_CENTRAL + "(3) Add a district");
+            System.out.println("    -    ");
+
+        }else if(threadName.equals("openMenu")) {
+            returnedValue = Integer.parseInt(scan.next());
+        }else if(threadName.equals("addDistrict")) {
+            System.out.println("Add district called.");
+            System.out.println(SERVER_CENTRAL+"ADD DISTRICT");
+            System.out.println(SERVER_CENTRAL+"District Name:");
+            String name = scan.next();
+            System.out.println(SERVER_CENTRAL+"Multicast IP:");
+            String multicastIp = scan.next();
+            System.out.println(SERVER_CENTRAL+"Multicast Port:");
+            while (!scan.hasNextInt()) {
+                System.out.println("You have badly written the port, do it again (it has to be an integer)");
+                scan.next();
+            }
+            int multicastPort = scan.nextInt();
+            System.out.println(SERVER_CENTRAL+"Request IP:");
+            String requestIp = scan.next();
+            System.out.println(SERVER_CENTRAL+"Request Port:");
+            while (!scan.hasNextInt()) {
+                System.out.println("You have badly written the port, do it again (it has to be an integer)");
+                scan.next();
+            }
+            int requestPort = scan.nextInt();
+            if(!doesDistrictExists(name, districtsScan)) {
+                districtsScan.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
+            }
+        }else if(threadName.equals("closeScan")) {
+            scan.close();
+        }
+
+        return String.valueOf(returnedValue);
     }
 
     /**
-     * Function displaying the menu and switching between the modes
-     * @param scan scanner can't be reopen
+     * Function to know is a district exist yet
+     * @param name
+     * @param districts
+     * @return
      */
-    private void openMenu(Scanner scan) {
-
-        int choice;
-        System.out.println("    -    ");
-        System.out.println(SERVER_CENTRAL + "Console");
-        System.out.println(SERVER_CENTRAL + "(1) List of the Districts");
-        System.out.println(SERVER_CENTRAL + "(2) List of the Clients");
-        System.out.println(SERVER_CENTRAL + "(3) Add a district");
-        System.out.println("    -    ");
-
-        choice = Integer.parseInt(scan.next());
-
-        switch (choice) {
-            case 1:
-                //list districts
-                System.out.println("-------------------------------");
-                for (District d : districts)
-                    System.out.println(d.toString());
-                openMenu(scan);
-                break;
-            case 2:
-                //list clients
-                System.out.println("-------------------------------");
-                for (Client c : clients)
-                    System.out.println(c.toString());
-                openMenu(scan);
-                break;
-            case 3:
-                //add a district
-                addDistrict(scan);
-                openMenu(scan);
-            default:
-                //default
-                System.out.println("Please enter a correct number (between 1 and 3)");
-                openMenu(scan);
-                break;
-        }
-    }
-
-
-            /**
-             * To add a new district in the Central
-             * @param scan scanner can't be reopen
-             */
-    private void addDistrict(Scanner scan){
-        System.out.println(SERVER_CENTRAL+"ADD DISTRICT");
-        System.out.println(SERVER_CENTRAL+"District Name:");
-        String name = scan.next();
-        System.out.println(SERVER_CENTRAL+"Multicast IP:");
-        String multicastIp = scan.next();
-        System.out.println(SERVER_CENTRAL+"Multicast Port:");
-        while (!scan.hasNextInt()) {
-            System.out.println("You have badly written the port, do it again (it has to be an integer)");
-            scan.next();
-        }
-        int multicastPort = scan.nextInt();
-        System.out.println(SERVER_CENTRAL+"Request IP:");
-        String requestIp = scan.next();
-        System.out.println(SERVER_CENTRAL+"Request Port:");
-        while (!scan.hasNextInt()) {
-            System.out.println("You have badly written the port, do it again (it has to be an integer)");
-            scan.next();
-        }
-        int requestPort = scan.nextInt();
-        if(!doesDistrictExists(name)) {
-            this.districts.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
-        }
-    }
-
-    private Boolean doesDistrictExists(String name){
+    private static Boolean doesDistrictExists(String name, ArrayList<District> districts){
         for(District d: districts){
             if(d.getName().equals(name)){
                 System.out.println("The district "+name+" already exists ! ");
@@ -130,6 +112,45 @@ public class Central {
             }
         }
         return false;
+    }
+
+    /**
+     * Function displaying the menu and switching between the modes
+     */
+    private void openMenu() {
+        System.out.println("    -    ");
+        System.out.println(SERVER_CENTRAL + "Console");
+        System.out.println(SERVER_CENTRAL + "(1) List of the Districts");
+        System.out.println(SERVER_CENTRAL + "(2) List of the Clients");
+        System.out.println(SERVER_CENTRAL + "(3) Add a district");
+        System.out.println("    -    ");
+
+        int choice = Integer.parseInt(scanGlobal("openMenu", null));
+        switch (choice) {
+            case 1:
+                //list districts
+                System.out.println("-------------------------------");
+                for (District d : districts)
+                    System.out.println(d.toString());
+                openMenu();
+                break;
+            case 2:
+                //list clients
+                System.out.println("-------------------------------");
+                for (Client c : clients)
+                    System.out.println(c.toString());
+                openMenu();
+                break;
+            case 3:
+                //add a district
+                scanGlobal("addDistrict", districts);
+                openMenu();
+            default:
+                //default
+                System.out.println("Please enter a correct number (between 1 and 3)");
+                openMenu();
+                break;
+        }
     }
 }
 
@@ -143,19 +164,16 @@ class AcceptClient extends Thread {
     private List<Client> clients;
     private static final String IP_SERVER = "192.168.1.11";
     private static final int PORT_SERVER = 9000;
-    Scanner scan;
 
-
-    public AcceptClient(ArrayList<District> districts, ArrayList<Client> clients, Scanner scan){
+    public AcceptClient(ArrayList<District> districts, ArrayList<Client> clients){
         this.districts = districts;
         this.clients = clients;
-        this.scan = scan;
     }
 
     public void run() {
         try{
             while(true){
-                 waitAuthorization(scan);
+                 waitAuthorization();
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -164,9 +182,9 @@ class AcceptClient extends Thread {
 
     /**
      * Method to authorize a Client to connect to a Distributed Server
-     * @param scan
+     * @param
      */
-    private void waitAuthorization(Scanner scan){
+    private void waitAuthorization(){
         ServerSocket serverSocket;
         Socket socket;
         String clientDistrictName = null;
@@ -197,7 +215,7 @@ class AcceptClient extends Thread {
             MessageBroker mbSend = new MessageBroker();
             mbSend.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
             if(districtReturned!=null){
-                if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), clientDistrictName, scan)){
+                if(giveAuthorization(String.valueOf(socket.getRemoteSocketAddress()), clientDistrictName)){
                     mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_ACCEPTED);
                     mbSend.put(Const.KEY_DISTRICT_REQUEST_IP, districtReturned.getRequestIP());
                     mbSend.put(Const.KEY_DISTRICT_REQUEST_PORT, districtReturned.getRequestPort());
@@ -231,16 +249,10 @@ class AcceptClient extends Thread {
         return null;
     }
 
-    private Boolean giveAuthorization(String ipClient, String ClientDistrict, Scanner scan) {
+    private Boolean giveAuthorization(String ipClient, String ClientDistrict) {
         Thread.interrupted();
         System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
-        System.out.println("1. - YES");
-        System.out.println("2. - NO");
-        //TODO to change --> faire fonctionner le scanner
-        //Apparemment pour le faire fonctionner il faut interompre le thread main, parce que sinon il sait pas pour quel thread il scan
-        //mais je sais pas comment faire ...
-        //return scan.next().equals("1");
-        return true;
+        return scanGlobal("giveAuthorization", null).equals("1");
     }
 
     private void updateClientList(String clientName, String districtConnectedTo){
@@ -319,3 +331,4 @@ class GeneratorID extends Thread {
         }
     }
 }
+
