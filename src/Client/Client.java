@@ -174,7 +174,6 @@ public class Client {
 
             inputStream.close();
             objectOutputStream.close();
-            //socket.close();
         }catch (UnknownHostException e) {
             e.printStackTrace();
         }catch (IOException e) {

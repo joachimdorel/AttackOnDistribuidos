@@ -247,11 +247,11 @@ class AcceptClient extends Thread {
         //TODO to change --> faire fonctionner le scanner
         //Apparemment pour le faire fonctionner il faut interompre le thread main, parce que sinon il sait pas pour quel thread il scan
         //mais je sais pas comment faire ...
-		if (scan.next().equals("Y")){
+		//if (scan.next().equals("Y")){
         	return true;
-		}else{
-        	return false;
-		}
+		//}else{
+        //	return false;
+		//}
     }
 
     private void updateClientList(String clientName, String districtConnectedTo){
