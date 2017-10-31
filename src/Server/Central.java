@@ -189,7 +189,7 @@ public class Central {
 class AcceptClient extends Thread {
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     private List<District> districts;
-    private List<Client> clients;
+    private final List<Client> clients;
     private static final String IP_SERVER = "192.168.1.11";
     private static final int PORT_SERVER = 9000;
 
@@ -281,28 +281,30 @@ class AcceptClient extends Thread {
         Thread.interrupted();
         System.out.println(SERVER_CENTRAL + "Give authorization to " + ipClient + " for the district " + ClientDistrict);
 
-        //Displaying the menu
-        System.out.println("    -    ");
-        System.out.println(SERVER_CENTRAL + "Console");
-        System.out.println(SERVER_CENTRAL + "(1) List of the Districts");
-        System.out.println(SERVER_CENTRAL + "(2) List of the Clients");
-        System.out.println(SERVER_CENTRAL + "(3) Add a district");
-        System.out.println("    -    ");
+//        //Displaying the menu
+//        System.out.println("    -    ");
+//        System.out.println(SERVER_CENTRAL + "Console");
+//        System.out.println(SERVER_CENTRAL + "(1) List of the Districts");
+//        System.out.println(SERVER_CENTRAL + "(2) List of the Clients");
+//        System.out.println(SERVER_CENTRAL + "(3) Add a district");
+//        System.out.println("    -    ");
 
         return scanGlobal("giveAuthorization", null).equals("1");
     }
 
     private void updateClientList(String clientName, String districtConnectedTo){
-        Boolean update = false;
-        Iterator<Client> clientIterator = clients.iterator();
-        while(!update && clientIterator.hasNext()){
-            if (clientIterator.next().getName().equals(clientName)) {
-                update = true;
-                clientIterator.next().setConnectedToDistrict(districtConnectedTo);
+        synchronized (clients) {
+            Boolean update = false;
+            Iterator<Client> clientIterator = clients.iterator();
+            while (!update && clientIterator.hasNext()) {
+                if (clientIterator.next().getName().equals(clientName)) {
+                    update = true;
+                    clientIterator.next().setConnectedToDistrict(districtConnectedTo);
+                }
             }
-        }
-        if(!update){
-            clients.add(new Client(clientName, districtConnectedTo));
+            if (!update) {
+                clients.add(new Client(clientName, districtConnectedTo));
+            }
         }
     }
 }
