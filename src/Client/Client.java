@@ -3,7 +3,6 @@ package Client;
 import Creature.Titans;
 import Util.Const;
 import Util.MessageBroker;
-import com.sun.org.apache.xpath.internal.SourceTree;
 
 import java.io.*;
 import java.net.*;
@@ -66,6 +65,11 @@ public class Client {
 		try{
 			socketCentral=new Socket(ipServer,portServer);
 			System.out.println("Socket between the client and the central server has been established. They can now communicate.");
+		}catch(SocketException e){
+			e.printStackTrace();
+			System.out.println(CLIENT+"There were a problem with the instantiation of the socket with the central server");
+			System.out.println(CLIENT+"Maybe you didn't write the ip or the port correctly, try again ");
+			connectionServer(scan);
 		}catch(UnknownHostException e){
 			e.printStackTrace();
 		}catch(IOException e){
