@@ -13,7 +13,7 @@ import java.util.*;
  * and vice versa (map serialization into JSON string)
  */
 
-//TODO : rajouter pour le traitement des listes et des objets (liste de titan)
+
 @SuppressWarnings("unchecked")
 public class MessageBroker {
     /**
@@ -100,7 +100,6 @@ public class MessageBroker {
 
     public Titans getTitansValue(String key) {
         Object value = map.get(key);
-        //TODO check the cast
         return Titans.valueOf((LinkedHashMap<String, Object>) value);
     }
 
@@ -113,7 +112,6 @@ public class MessageBroker {
             return null;
         ArrayList<Titans> res = new ArrayList<Titans>();
         for (Object o : obj) {
-            //TODO check the cast
             if (o instanceof java.util.LinkedHashMap) {
                 res.add(Titans.valueOf((LinkedHashMap<String, Object>) o));
             }
@@ -131,14 +129,6 @@ public class MessageBroker {
         map.put(key, value);
     }
 
-    /**
-     * Get the internal map
-     *
-     * @return the map of the ContentBroker instance
-     */
-    public Map<String, Object> getMap() {
-        return map;
-    }
 
     /**
      * Parse a JSON string into the map of the ContentBroker instance

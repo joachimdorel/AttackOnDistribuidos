@@ -3,6 +3,8 @@ package Client;
 import Creature.Titans;
 import Util.Const;
 import Util.MessageBroker;
+import com.sun.org.apache.xpath.internal.SourceTree;
+
 import java.io.*;
 import java.net.*;
 import java.net.MulticastSocket;
@@ -31,8 +33,6 @@ public class Client {
     public  ArrayList<Titans> tabDistrictTitans = new ArrayList<Titans>();
     private  ArrayList<Titans> tabCapturedTitans = new ArrayList<Titans>();
     private  ArrayList<Titans> tabKilledTitans = new ArrayList<Titans>();
-
-	//TODO listening thread will be overwrited when changing of district)
 
     public static void main(String[] args) throws Exception {
         System.out.println(CLIENT);
@@ -95,12 +95,12 @@ public class Client {
 		}
 	}
 
-	//TODO
-	private void disconnectionDistrict (){
 
-	}
+//	private void disconnectionDistrict (){
+//
+//	}
 
-	//TODO what is our way to identify a district ?
+
     /**
      * Function that take the port, ip address of the central server, and name of the wanted district,
      * and ask the connection authorization to the central server. Return true if success, false if fail.
@@ -108,13 +108,7 @@ public class Client {
      * @return
      */
     private boolean askServerCentral(String districtName) {
-
-        String responseFromServer = null;
-
         try {
-            //TODO update when deployed
-            //socketCentral = new Socket(InetAddress.getLocalHost(), portServer); // Attention ne marche que parce que les deux programmes sont sur la même machine!
-
 			MessageBroker mbClient = new MessageBroker();
 			mbClient.put(Const.REQ_TYPE, Const.REQ_CHOSE_DISTRICT);
 			mbClient.put(Const.REQ_CONTENT, districtName);
@@ -126,8 +120,7 @@ public class Client {
 
             InputStream inputStream = socketCentral.getInputStream();
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-			responseFromServer = String.valueOf(objectInputStream.readObject());
-			System.out.println("Réponse du serveur : "+ responseFromServer);
+			String responseFromServer = String.valueOf(objectInputStream.readObject());
 
 			MessageBroker mbReceive = new MessageBroker(responseFromServer);
 			if (mbReceive.getStringValue(Const.REQ_CONTENT).equals(Const.VALUE_ACCESS_REFUSED)){
@@ -142,7 +135,7 @@ public class Client {
 			ipDistrict = mbReceive.getStringValue(Const.KEY_DISTRICT_REQUEST_IP);
 			IPMulticast = mbReceive.getStringValue(Const.KEY_DISTRICT_MULTICAST_IP);
 			portMulticast=mbReceive.getIntegerValue(Const.KEY_DISTRICT_MULTICAST_PORT);
-			System.out.println("----- DEBUG : "+portDistrict + " | " + ipDistrict + " | " + IPMulticast + " | " + portMulticast);
+			//System.out.println("----- DEBUG : "+portDistrict + " | " + ipDistrict + " | " + IPMulticast + " | " + portMulticast);
 
             inputStream.close();
             objectOutputStream.close();
@@ -199,11 +192,10 @@ public class Client {
 
 			case 2:
 				//change District
-				//TODO : deconnect from the multicastsocket of the current district
-				portDistrict = -1;
-				ipDistrict = null;
-				//TODO : close the current thread and open a new thread!!
-				connectDistrict(scan, c);
+				//portDistrict = -1;
+				//ipDistrict = null;
+				//connectDistrict(scan, c);
+				System.out.println(CLIENT+ "CAUTION : This function is not implemented yet");
 				openMenu(scan, c);
 				break;
 
@@ -271,7 +263,7 @@ public class Client {
 	private void showListTitansFromCurrentDistrict(ArrayList<Titans> tab){
 		System.out.println("-------------------------------");
 		for (Titans titan : tab)
-			System.out.println(titan.getName() + ", ID : " + titan.getID() + ", type: " + titan.getType());
+			System.out.println("Name : " + titan.getName() + ", ID : " + titan.getID() + ", type: " + titan.getType());
 	}
 
 	/**
@@ -282,7 +274,7 @@ public class Client {
 	private void showListTitansFromAllDistrict(ArrayList<Titans> tab){
 		System.out.println("-------------------------------");
 		for (Titans titan : tab)
-			System.out.println(titan.getName()
+			System.out.println("Name : " + titan.getName()
 					+ ", ID : " + titan.getID()
 					+ ", type: " + titan.getType()
 					+ ", district: " + titan.getDistrict());
@@ -382,14 +374,13 @@ public class Client {
 					requestAccepted = true;
 				}
 
-				//TODO to remove
-				final InetAddress returnIPAddress = receivePacket.getAddress();
-				final int port = receivePacket.getPort();
-				System.out.println("From server at: " + returnIPAddress + ":"
-						+ port);
-				System.out.println("Message: " + dataReceived.toJson());
+//				final InetAddress returnIPAddress = receivePacket.getAddress();
+//				final int port = receivePacket.getPort();
+//				System.out.println("From server at: " + returnIPAddress + ":"
+//						+ port);
+//				System.out.println("Message: " + dataReceived.toJson());
 			} catch (final SocketTimeoutException ste){
-				System.out.println("Timeout Occurrend : Packet assumed lost");
+				System.out.println("Timeout Occurred : Packet assumed lost");
 			}
 			socket.close();
 		} catch (SocketException e) {

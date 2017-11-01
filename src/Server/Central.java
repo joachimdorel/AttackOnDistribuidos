@@ -12,8 +12,7 @@ import static Server.Central.scanGlobal;
 public class Central {
 
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
-    //TODO rentrer en dynamique par dans la console ??
-    private static final int PORT_SERVER = 5000;
+    private static final int PORT_SERVER = 4600;
     private ArrayList<District> districts;
     private ArrayList<Client> clients;
 
@@ -139,46 +138,6 @@ public class Central {
                 break;
         }
     }
-
-    /**
-     * To add a new district in the Central
-     * @param scan scanner can't be reopen
-     */
-    private void addDistrict(Scanner scan){
-        System.out.println(SERVER_CENTRAL+"ADD DISTRICT");
-        System.out.println(SERVER_CENTRAL+"District Name:");
-        String name = scan.next();
-        System.out.println(SERVER_CENTRAL+"Multicast IP:");
-        System.out.println("CAUTION : The multicast ip must be in the range 224.0.0.0 to 239.255.255.255");
-        String multicastIp = scan.next();
-        System.out.println(SERVER_CENTRAL+"Multicast Port:");
-        while (!scan.hasNextInt()) {
-            System.out.println("You have badly written the port, do it again (it has to be an integer)");
-            scan.next();
-        }
-        int multicastPort = scan.nextInt();
-        System.out.println(SERVER_CENTRAL+"Request IP:");
-        String requestIp = scan.next();
-        System.out.println(SERVER_CENTRAL+"Request Port:");
-        while (!scan.hasNextInt()) {
-            System.out.println("You have badly written the port, do it again (it has to be an integer)");
-            scan.next();
-        }
-        int requestPort = scan.nextInt();
-        if(!doesDistrictExists(name)) {
-            this.districts.add(new District(name, multicastIp, multicastPort, requestIp, requestPort));
-        }
-    }
-
-    private Boolean doesDistrictExists(String name){
-        for(District d: districts){
-            if(d.getName().equals(name)){
-                System.out.println("The district "+name+" already exists ! ");
-                return true;
-            }
-        }
-        return false;
-    }
 }
 
 //-------------------------------------------------------------------------------------
@@ -189,7 +148,7 @@ class AcceptClient extends Thread {
     private static final String SERVER_CENTRAL = "[SERVER CENTRAL] ";
     private List<District> districts;
     private final List<Client> clients;
-    private static final int PORT_SERVER = 5000;
+    private static final int PORT_SERVER = 4600;
 
     public AcceptClient(ArrayList<District> districts, ArrayList<Client> clients){
         this.districts = districts;
@@ -255,7 +214,6 @@ class AcceptClient extends Thread {
                 mbSend.put(Const.REQ_CONTENT, Const.VALUE_ACCESS_IMPOSSIBLE);
             }
             objectOutputStream.writeObject(mbSend.toJson());
-            System.out.println(SERVER_CENTRAL+"Response to " + socket.getRemoteSocketAddress() + " to "+ clientDistrictName);
             objectOutputStream.close();
 
             serverSocket.close();
@@ -313,7 +271,7 @@ class AcceptClient extends Thread {
 
 class GeneratorID extends Thread {
     private static Integer generator_ID = 1;
-    private final int PORT_SERVER = 9000;
+    private final int PORT_SERVER = 4600;
 
     public void run() {
         try{
@@ -331,13 +289,11 @@ class GeneratorID extends Thread {
     * */
     private void generateID (){
         try {
-            //TODO change in the virtual machine
             InetAddress IPServer = InetAddress.getLocalHost();
 
             final DatagramSocket serverSocket = new DatagramSocket(PORT_SERVER, IPServer);
             byte[] receiveData;
             byte[] sendData;
-            //TODO to remove
             System.out.println("Local address : " + serverSocket.getLocalAddress());
             while (true) {
                 receiveData = new byte[100];
@@ -347,11 +303,8 @@ class GeneratorID extends Thread {
                 MessageBroker message = new MessageBroker(new String(receivePacket.getData()));
                 final InetAddress IPAddress = receivePacket.getAddress();
                 final int port = receivePacket.getPort();
-
-                //TODO to remove
-                System.out.println("From: " + IPAddress + ":" + port);
-                System.out.println("Message: " + message.toJson());
-
+//                System.out.println("From: " + IPAddress + ":" + port);
+//                System.out.println("Message: " + message.toJson());
                 if(message.getStringValue(Const.REQ_TYPE).equals(Const.REQ_NEW_ID)){
                     message.put(Const.REQ_CONTENT, generator_ID++);
                 }

@@ -7,9 +7,6 @@ import java.io.*;
 import java.net.*;
 import java.lang.*;
 
-
-//TODO creation of a new distributed district server
-
 public class Distributed {
     private static final String DISTRIBUTED = " DISTRICT ";
     private String name = "";
@@ -107,7 +104,7 @@ public class Distributed {
                 //list titans
                 System.out.println("-------------------------------");
                 for (Titans t : titansList)
-                    System.out.println(t.getName() + ", ID : " + t.getID() + ", type: " + t.getType());
+                    System.out.println("Name : " + t.getName() + ", ID : " + t.getID() + ", type: " + t.getType());
                 openMenu(scan);
                 break;
             case 2:
@@ -168,7 +165,6 @@ public class Distributed {
 
             byte[] sendRequest;
             sendRequest = request.getBytes();
-            System.out.println("---- ready to send data");
             InetAddress IPCentralAddress = InetAddress.getByName(centralServerIP);
             final DatagramPacket sendPacket = new DatagramPacket(
                     sendRequest, sendRequest.length,IPCentralAddress, centralServerPort);
@@ -179,12 +175,11 @@ public class Distributed {
                 final MessageBroker dataReceived = new MessageBroker(new String(receivePacket.getData()));
                 newId = dataReceived.getIntegerValue(Const.REQ_CONTENT);
 
-                //TODO to remove
-                final InetAddress returnIPAddress = receivePacket.getAddress();
-                final int port = receivePacket.getPort();
-                System.out.println("From server at: " + returnIPAddress + ":"
-                        + port);
-                System.out.println("Message: " + dataReceived.toJson());
+//                final InetAddress returnIPAddress = receivePacket.getAddress();
+//                final int port = receivePacket.getPort();
+//                System.out.println("From server at: " + returnIPAddress + ":"
+//                        + port);
+//                System.out.println("Message: " + dataReceived.toJson());
             } catch (final SocketTimeoutException ste){
                 System.out.println("Timeout Occurred : Packet assumed lost");
             }
@@ -200,9 +195,9 @@ public class Distributed {
     }
 
 
-	//Function that sends the current Titans' list throught the multicast
+	//Function that sends the current Titans' list thought the multicast
 	public void sendTitansListMulticast() throws IOException {
-        byte[] contenuMessage;
+        byte[] contendMessage;
         DatagramPacket message;
         try{
             MessageBroker listToSend = new MessageBroker();
@@ -214,8 +209,8 @@ public class Distributed {
             ByteArrayOutputStream sortie = 	new ByteArrayOutputStream();
 
             (new DataOutputStream(sortie)).writeUTF(stringToSend);
-            contenuMessage = sortie.toByteArray();
-            message = new DatagramPacket(contenuMessage, contenuMessage.length, groupAddress, multicastPort);
+            contendMessage = sortie.toByteArray();
+            message = new DatagramPacket(contendMessage, contendMessage.length, groupAddress, multicastPort);
             socketMulticast.send(message);
             System.out.println("[" + DISTRIBUTED + name + " ] " + "Message sent to multicast");
             System.out.println("");
@@ -254,13 +249,12 @@ class ClientRequests extends Thread {
 
     private void listenRequests (){
         try {
-//            InetAddress requestIPInetAddress = InetAddress.getByName(requestIP); //works by in a thread create a new IP
-            InetAddress requestIPInetAddress = InetAddress.getLocalHost(); //TODO to change
+            InetAddress requestIPInetAddress = InetAddress.getLocalHost();
 
             final DatagramSocket serverSocket = new DatagramSocket(requestPort, requestIPInetAddress);
             byte[] receiveData;
             byte[] sendData;
-            //TODO to remove
+
             System.out.println("Local address : " + serverSocket.getLocalAddress());
 
             while (true) {
@@ -272,13 +266,11 @@ class ClientRequests extends Thread {
                 final InetAddress IPAddress = receivePacket.getAddress();
                 final int port = receivePacket.getPort();
 
-                //TODO to remove
-                System.out.println("From: " + IPAddress + ":" + port);
-                System.out.println("Message: " + messageReceived.toJson());
+//                System.out.println("From: " + IPAddress + ":" + port);
+//                System.out.println("Message: " + messageReceived.toJson());
 
                 MessageBroker messageToSent = new MessageBroker(Const.REQ_TYPE, messageReceived.getStringValue(Const.REQ_TYPE));
                 if(messageReceived.getStringValue(Const.REQ_TYPE).equals(Const.REQ_CAPTURE_TITAN)){
-                    //TODO : put the request in a fifo
 
                     synchronized (titansList){
                         Titans titan = titanIsThere(messageReceived.getIntegerValue(Const.REQ_CONTENT));
